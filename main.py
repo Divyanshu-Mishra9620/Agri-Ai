@@ -1,51 +1,50 @@
 import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from contextlib import asynccontextmanager
 
 from app.api.endpoints import chat
 from app.core.config import settings
-from app.utils.data_loader import download_pdfs, extract_text_from_pdfs
-from app.utils.knowledge_base import create_and_populate_chroma_db
-from app.services.rag_system import RAGSystem
+from app.utils.data_loader import download_and_process_pdfs
+from app.utils import knowledge_base
+from app.dependencies import app_state
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    logging.info("Application startup...")
+    download_and_process_pdfs(settings.PDF_URLS, settings.DATA_DIR)
+    
+    collection = knowledge_base.build_or_load_knowledge_base()
+    
+    app_state["chroma_collection"] = collection
+    logging.info("Knowledge base is ready.")
+    
+    yield
+    
+    logging.info("Application shutdown.")
+    app_state.clear()
+
 app = FastAPI(
     title=settings.PROJECT_NAME,
-    description="An API for agricultural information using a local Ollama-powered RAG system.",
-    version="2.0.0"
+    description="An AI-powered agricultural assistant for SIH.",
+    version="1.0.0",
+    lifespan=lifespan
 )
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.ALLOWED_HOSTS,
+    allow_origins=settings.ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-@app.on_event("startup")
-def startup_event():
-    logging.info("--- Starting Application Initialization ---")
-    
-    download_pdfs()
-    
-    documents = extract_text_from_pdfs()
-    if not documents:
-        logging.error("No documents were processed. The knowledge base will be empty.")
-        raise RuntimeError("Failed to load any data. Shutting down.")
-    
-    collection = create_and_populate_chroma_db(documents)
-    
-    rag_service = RAGSystem(collection)
-    
-    chat.rag_service = rag_service
-    
-    logging.info("--- Application Initialization Complete. API is ready. ---")
+app.include_router(chat.router, prefix="/api")
 
-app.include_router(chat.router, prefix="/api", tags=["Agricultural Assistant"])
 
-@app.get("/", summary="Health Check", tags=["Root"])
+@app.get("/", tags=["Root"])
 def read_root():
-    return {"status": "ok", "message": "Agri-AI Ollama API is running."}
+    return {"message": "Welcome to the Agri-AI Companion API!"}
 

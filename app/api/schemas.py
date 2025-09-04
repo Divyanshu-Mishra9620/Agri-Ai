@@ -1,10 +1,18 @@
-from pydantic import BaseModel, Field
-
+from pydantic import BaseModel
 class QueryRequest(BaseModel):
-    query: str = Field(..., min_length=3, example="What is the best fertilizer for sugarcane?")
+    query: str
 
-class PredictionRequest(BaseModel):
-    crop: str = Field(..., example="wheat")
-    parameter: str = Field(..., example="water availability")
-    change: str = Field(..., example="-30% due to weak monsoon")
+class PredictRequest(BaseModel):
+    crop: str
+    parameter: str
+    change: str
+
+class AnswerResponse(BaseModel):
+    answer: str
+
+class PredictionResponse(BaseModel):
+    prediction: str
+
+class AnalysisResponse(BaseModel):
+    analysis: str
 

@@ -1,42 +1,40 @@
 import logging
-from typing import List, Dict
-
 import chromadb
 from chromadb.utils import embedding_functions
-
 from app.core.config import settings
+from app.utils.data_loader import load_processed_documents
 
-def create_and_populate_chroma_db(documents: List[Dict[str, str]]):
-    logging.info(f"Initializing ChromaDB with embedding model: {settings.EMBEDDING_MODEL_NAME}...")
-    client = chromadb.PersistentClient(path=settings.CHROMA_DB_PATH)
+def build_or_load_knowledge_base():
+    logging.info("Initializing knowledge base...")
+    client = chromadb.PersistentClient(path=settings.DB_DIR)
 
-    sentence_transformer_ef = embedding_functions.SentenceTransformerEmbeddingFunction(
+    embedding_function = embedding_functions.SentenceTransformerEmbeddingFunction(
         model_name=settings.EMBEDDING_MODEL_NAME
     )
-
+    
     collection = client.get_or_create_collection(
         name=settings.COLLECTION_NAME,
-        embedding_function=sentence_transformer_ef,
-        metadata={"hnsw:space": "cosine"}
+        embedding_function=embedding_function
     )
     
-    logging.info("Processing and adding documents to ChromaDB...")
-    new_chunks_added = 0
-    for doc in documents:
-        words = doc["content"].split()
-        chunk_size = 350
-        chunks = [" ".join(words[i:i + chunk_size]) for i in range(0, len(words), chunk_size)]
+    if collection.count() == 0:
+        logging.info(f"Collection '{settings.COLLECTION_NAME}' is empty. Populating with new data...")
         
-        for i, chunk in enumerate(chunks):
-            chunk_id = f"{doc['source']}_chunk_{i}"
-            if not collection.get(ids=[chunk_id])['ids']:
-                collection.add(
-                    ids=[chunk_id],
-                    documents=[chunk],
-                    metadatas=[{"source": doc["source"]}]
-                )
-                new_chunks_added += 1
-    
-    logging.info(f"Added {new_chunks_added} new document chunks to the '{settings.COLLECTION_NAME}' collection.")
+        documents = load_processed_documents()
+        
+        if not documents:
+            logging.warning("No documents found to populate the knowledge base. The chatbot may not have any context.")
+            return collection
+
+        ids = [f"doc_{i}" for i in range(len(documents))]
+
+        collection.add(
+            documents=documents,
+            ids=ids
+        )
+        logging.info(f"Successfully added {len(documents)} documents to the collection.")
+    else:
+        logging.info(f"Collection '{settings.COLLECTION_NAME}' already exists with {collection.count()} documents.")
+        
     return collection
 

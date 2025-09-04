@@ -1,84 +1,66 @@
-from pathlib import Path
-from typing import List, Dict
+from pydantic_settings import BaseSettings
 
-class Settings:
+class Settings(BaseSettings):
+    PROJECT_NAME: str = "SIH Agricultural AI Companion"
     
-    PROJECT_NAME: str = "SIH Agri-AI Ollama API"
-
-    OLLAMA_API_BASE_URL: str = "http://localhost:11434/api"
-    
-    GENERATION_MODEL_NAME: str = "llama3.1"
+    OLLAMA_API_BASE_URL: str = "http://127.0.0.1:11434"
+    GENERATION_MODEL_NAME: str = "llama3:8b" 
     VISION_MODEL_NAME: str = "llava"
     EMBEDDING_MODEL_NAME: str = "BAAI/bge-base-en-v1.5"
-
-    CHROMA_DB_PATH: str = "chroma_db"
-    COLLECTION_NAME: str = "agri_knowledge_base"
-
-    DATA_DIR: Path = Path("data")
-    PDF_SOURCES: Dict[str, str] = {
-        "sugarcane_practices": "https://icar.org.in/sites/default/files/inline-files/Vegetables-intercropping-with-autumn-planted-sugarcane.pdf",
-        "doubling_farmer_income": "https://icar.org.in/sites/default/files/inline-files/How-to-double-farmers-income.pdf",
-        "wheat_practices": "https://iiwbr.org.in/wp-content/uploads/2023/08/Wheat-Package-of-practices-for-increasing-production-1984.pdf",
-        "rice_practices": "https://www.icar-iirr.org/AICRIP/Final%20POS%202019-2020.pdf"
-    }
     
-    ALLOWED_HOSTS: List[str] = ["http://localhost", "http://localhost:3000", "http://localhost:5173", "http://127.0.0.1:5500"]
-    
+    ALLOWED_ORIGINS: list[str] = ["*"]
+
+    DATA_DIR: str = "data"
+    DB_DIR: str = "chroma_db"
+    COLLECTION_NAME: str = "agri_docs"
+
     QA_PROMPT_TEMPLATE: str = """
-        You are an expert agricultural assistant for Indian farmers. 
-        Your role is to provide clear, practical, and confident answers as if you are talking directly to a farmer in person. 
-    
-        RULES:
-        - Always prioritize the information given in the CONTEXT.
-        - If the CONTEXT does not contain the answer, use web knowledge and your expertise to provide the best possible solution.
-        - Never say phrases like "I don’t have data," "I don’t have specific data," or "based on my training data." 
-        - Respond naturally, as if you have all the information.
-        - Only if no information is available even after searching, reply exactly:  
-          **"I do not have information on that topic based on my current documents."**
-        - Do not invent or make up information.
-    
-        CONTEXT:
-        ---
-        {context}
-        ---
-    
-        QUESTION:
-        {query}
-    
-        ANSWER (as an expert agricultural guide for Indian farmers):
+    You are 'Krishi Mitra', an expert AI agronomist specializing in Indian agriculture. Your audience is Indian farmers, so use simple, clear, and encouraging language.
+    **Your Task:**
+    Answer the user's question based on the provided CONTEXT. If the context is insufficient, use your general knowledge but always frame it within the Indian agricultural landscape.
+    **CONTEXT:**
+    ---
+    {context}
+    ---
+    **QUESTION:** {query}
+    **Answer (as Krishi Mitra):**
     """
 
-
     PREDICTIVE_PROMPT_TEMPLATE: str = """
-        You are an expert agricultural analyst.
-        Based on the provided standard cultivation practices for {crop}, analyze the impact of a specific scenario.
-        
-        STANDARD PRACTICES CONTEXT:
-        ---
-        {context}
-        ---
-
-        SCENARIO:
-        Analyze the likely impact if the '{parameter}' changes by '{change}'.
-
-        Provide a concise, point-form analysis covering:
-        1.  **Likely Impact:** What is the most probable effect on the crop's health, growth, or yield?
-        2.  **Preventative Measures:** Suggest three actionable steps a farmer could take to mitigate this impact.
-        
-        ANALYSIS:
+    You are an AI-powered agricultural risk assessment model for India. Your task is to analyze the impact of a specific environmental change on a crop.
+    **Analysis Details:**
+    - **Crop:** {crop}
+    - **Parameter Change:** The '{parameter}' changes by '{change}'.
+    **Provided Context on {crop}:**
+    ---
+    {context}
+    ---
+    **Instructions:**
+    Based on the context and your expertise, provide a structured report.
+    **Impact Assessment Report for {crop}**
+    **1. Impact Analysis:**
+    **2. Severity Level:** (Low, Medium, or High)
+    **3. Actionable Recommendations for Farmers:**
     """
 
     VISION_PROMPT: str = """
-        You are an expert plant pathologist and agronomist. Your task is to analyze the provided image of a crop. 
-        
-        Follow these steps for your analysis:
-        1.  **Identify the Crop:** If possible, identify the plant in the image.
-        2.  **Describe Observations:** Detail any visible symptoms of stress, such as discoloration, spots, lesions, or pests.
-        3.  **Provide a Diagnosis:** Based on the visual evidence, provide one or two most likely diagnoses.
-        4.  **Suggest Actionable Solutions:** Recommend clear, actionable steps for the farmer to take.
-
-        Structure your response in clear sections. If the image is unclear or not a plant, state that you cannot perform an analysis.
+    You are an expert plant pathologist. Analyze the provided image of a plant and generate a detailed diagnostic report for a farmer in a structured format.
+    **Plant Health Report**
+    **1. Plant Identification:**
+    **2. Health Status:** (e.g., Healthy / Diseased)
+    **3. Diagnosis:**
+    **4. Detailed Analysis:**
+    **5. Chemical Treatment Plan:**
+    **6. Organic/Biological Treatment Plan:**
+    **7. Preventative Measures:**
     """
 
-settings = Settings()
+    PDF_URLS: list[str] = [
+        "https://icar.org.in/sites/default/files/inline-files/Vegetables-intercropping-with-autumn-planted-sugarcane.pdf",
+        "https://icar.org.in/sites/default/files/inline-files/How-to-double-farmers-income.pdf"
+    ]
+    
+    class Config:
+        case_sensitive = True
 
+settings = Settings()
