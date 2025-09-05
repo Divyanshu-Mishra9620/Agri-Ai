@@ -12,7 +12,6 @@ def get_answer(request: schemas.QueryRequest, rag_system: RAGSystem = Depends(ge
     try:
         logging.info("Getting answer...")
         answer_text = rag_system.get_answer(request.query)
-        logging.info(answer_text)
         return schemas.AnswerResponse(answer=answer_text)
     except ConnectionError as e:
         logging.error(f"Ollama connection error: {e}")
