@@ -5,7 +5,10 @@ class Settings(BaseSettings):
     
     OLLAMA_API_BASE_URL: str = "http://127.0.0.1:11434"
     GENERATION_MODEL_NAME: str = "llama3:8b" 
-    VISION_MODEL_NAME: str = "llava"
+    
+    HUGGINGFACE_API_TOKEN: str = "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"  
+    VISION_MODEL_NAME: str = "YuchengShi/LLaVA-v1.5-7B-Plant-Leaf-Diseases-Detection"
+    
     EMBEDDING_MODEL_NAME: str = "BAAI/bge-base-en-v1.5"
     
     ALLOWED_ORIGINS: list[str] = ["*"]

@@ -1,0 +1,92 @@
+/** @type {import('tailwindcss').Config} */
+export default {
+  content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
+  theme: {
+    extend: {
+      colors: {
+        primary: {
+          DEFAULT: "#2563EB",
+          50: "#EBF2FF",
+          100: "#DBEAFE",
+          200: "#BFDBFE",
+          300: "#93C5FD",
+          400: "#60A5FA",
+          500: "#2563EB",
+          600: "#1D4ED8",
+          700: "#1E40AF",
+          800: "#1E3A8A",
+          900: "#1E3A8A",
+        },
+        ainstein: {
+          DEFAULT: "#00B75F",
+          50: "#E6F7F0",
+          100: "#B3E5D1",
+          200: "#80D4B2",
+          300: "#4DC293",
+          400: "#1AB174",
+          500: "#00B75F",
+          600: "#009A52",
+          700: "#007D45",
+          800: "#006038",
+          900: "#00432B",
+        },
+        sunburst: {
+          DEFAULT: "#FF9D33",
+          50: "#FFF3E6",
+          100: "#FFE1B3",
+          200: "#FFCE80",
+          300: "#FFBC4D",
+          400: "#FFA91A",
+          500: "#FF9D33",
+          600: "#E6842B",
+          700: "#CC6B23",
+          800: "#B3521B",
+          900: "#993913",
+        },
+        bubblegum: {
+          DEFAULT: "#FF6CA1",
+          50: "#FFF0F5",
+          100: "#FFDAE8",
+          200: "#FFC4DB",
+          300: "#FFADCE",
+          400: "#FF97C1",
+          500: "#FF6CA1",
+          600: "#E6608E",
+          700: "#CC547B",
+          800: "#B34868",
+          900: "#993C55",
+        },
+      },
+      fontFamily: {
+        sans: ["Inter", "system-ui", "sans-serif"],
+      },
+      animation: {
+        "fade-in": "fadeIn 0.3s ease-in-out",
+        "slide-up": "slideUp 0.3s ease-out",
+        "scale-in": "scaleIn 0.2s ease-out",
+        shake: "shake 0.4s ease-in-out",
+        "stagger-in": "fadeIn 0.3s ease-in-out forwards",
+      },
+      keyframes: {
+        fadeIn: {
+          "0%": { opacity: "0" },
+          "100%": { opacity: "1" },
+        },
+        slideUp: {
+          "0%": { opacity: "0", transform: "translateY(20px)" },
+          "100%": { opacity: "1", transform: "translateY(0)" },
+        },
+        scaleIn: {
+          "0%": { opacity: "0", transform: "scale(0.95)" },
+          "100%": { opacity: "1", transform: "scale(1)" },
+        },
+        shake: {
+          "0%, 100%": { transform: "translateX(0)" },
+          "25%": { transform: "translateX(-5px)" },
+          "75%": { transform: "translateX(5px)" },
+        },
+      },
+    },
+  },
+  plugins: [],
+};
