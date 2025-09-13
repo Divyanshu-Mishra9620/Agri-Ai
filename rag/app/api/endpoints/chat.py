@@ -1,6 +1,8 @@
 import logging
 from fastapi import APIRouter, Depends, UploadFile, File, HTTPException
 from app.api import schemas
+import requests
+from app.core.config import settings
 from app.services.rag_system import RAGSystem
 from app.dependencies import get_rag_system
 

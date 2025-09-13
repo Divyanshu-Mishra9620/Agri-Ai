@@ -11,3 +11,7 @@ Pillow
 python-multipart
 opencv-python
 numpy
+transformers 
+torch 
+accelerate 
+bitsandbytes
