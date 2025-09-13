@@ -15,7 +15,6 @@ class RAGSystem:
         self.ollama_base_url = settings.OLLAMA_API_BASE_URL
         self.generation_model = settings.GENERATION_MODEL_NAME
         
-        # Hugging Face for vision only
         self.hf_token = settings.HUGGINGFACE_API_TOKEN
         self.vision_model = settings.VISION_MODEL_NAME
         self.vision_analyzer = None
@@ -68,18 +67,15 @@ class RAGSystem:
         self._initialize_vision_model()
         
         try:
-            # Convert bytes to image
             np_arr = np.frombuffer(image_bytes, np.uint8)
             img = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
             
             if img is None:
                 raise HTTPException(status_code=400, detail="Could not decode image data.")
             
-            # Resize image if needed to avoid memory issues
             if img.shape[0] > 512 or img.shape[1] > 512:
                 img = cv2.resize(img, (512, 512), interpolation=cv2.INTER_AREA)
             
-            # Use the vision pipeline
             response = self.vision_analyzer(
                 img,
                 prompt=prompt,
