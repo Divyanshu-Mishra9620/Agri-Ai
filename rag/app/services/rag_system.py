@@ -1,123 +1,109 @@
-import base64
 import logging
-import requests
-import cv2
-import numpy as np
 from fastapi import HTTPException
-from transformers import pipeline
-import torch
+from io import BytesIO
+import google.generativeai as genai
+from PIL import Image
 
 from app.core.config import settings
+from app.services.web_search import search_the_web
+import requests
 
 class RAGSystem:
-    def __init__(self, collection):
-        self.collection = collection
-        self.ollama_base_url = settings.OLLAMA_API_BASE_URL
-        self.generation_model = settings.GENERATION_MODEL_NAME
-        
-        self.hf_token = settings.HUGGINGFACE_API_TOKEN
-        self.vision_model = settings.VISION_MODEL_NAME
-        self.vision_analyzer = None
-        
-    def _initialize_vision_model(self):
-        """Initialize the Hugging Face vision model only"""
-        if self.vision_analyzer is None:
-            try:
-                self.vision_analyzer = pipeline(
-                    "image-to-text",
-                    model=self.vision_model,
-                    token=self.hf_token,
-                    torch_dtype=torch.float16,
-                    device_map="auto",
-                    max_new_tokens=300
-                )
-            except Exception as e:
-                logging.error(f"Failed to initialize vision model: {e}")
-                raise ConnectionError(f"Failed to initialize vision model: {e}")
+    def __init__(self):
+        genai.configure(api_key=settings.GEMINI_API_KEY)
+        self.text_model = genai.GenerativeModel(settings.GEMINI_TEXT_MODEL)
+        self.vision_model = genai.GenerativeModel(settings.GEMINI_VISION_MODEL)
 
-    def _retrieve_context(self, query: str, n_results: int = 5) -> str:
+    def get_weather_alert(self, city: str = "Gorakhpur") -> str:
+        """
+        Fetch 7-day forecast from WeatherAPI, return analysis text.
+        On transient fetch/analysis errors, return a friendly message string
+        instead of raising ConnectionError (so endpoint can return 200).
+        """
         try:
-            logging.info(f"Retrieving context for query: {query}")
-            results = self.collection.query(query_texts=[query], n_results=n_results)
-            logging.info(f"Retrieved {len(results['documents'][0])} documents from ChromaDB.")
-            return "\n\n".join(results['documents'][0])
-        except Exception as e:
-            logging.error(f"Error retrieving context from ChromaDB: {e}")
-            return ""
-
-    def _invoke_text_model(self, prompt: str) -> str:
-        """Use Ollama for text generation"""
-        api_url = f"{self.ollama_base_url}/api/chat"
-        payload = {
-            "model": self.generation_model,
-            "messages": [{"role": "user", "content": prompt}],
-            "stream": False,
-        }
-
-        try:
-            response = requests.post(api_url, json=payload, timeout=120)
-            response.raise_for_status()
-            return response.json()['message']['content']
+            logging.info(f"Fetching weather forecast for {city} from WeatherAPI.com...")
+            api_url = (
+                f"http://api.weatherapi.com/v1/forecast.json"
+                f"?key={settings.WEATHERAPI_KEY}&q={city}&days=7&aqi=no&alerts=no"
+        )
+            resp = requests.get(api_url, timeout=10)
+            resp.raise_for_status()
+            weather_data = resp.json()
         except requests.RequestException as e:
-            logging.error(f"Failed to communicate with Ollama: {e}")
-            raise ConnectionError(f"Failed to communicate with Ollama: {e}")
+            logging.error(f"Failed to fetch weather data: {e}")
+            return "Sorry, I couldn't fetch the weather forecast at the moment."
 
-    def _invoke_vision_model(self, prompt: str, image_bytes: bytes) -> str:
-        """Use Hugging Face for vision analysis"""
-        self._initialize_vision_model()
-        
         try:
-            np_arr = np.frombuffer(image_bytes, np.uint8)
-            img = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
-            
-            if img is None:
-                raise HTTPException(status_code=400, detail="Could not decode image data.")
-            
-            if img.shape[0] > 512 or img.shape[1] > 512:
-                img = cv2.resize(img, (512, 512), interpolation=cv2.INTER_AREA)
-            
-            response = self.vision_analyzer(
-                img,
-                prompt=prompt,
-                max_new_tokens=400,
-                temperature=0.1
-            )
-            
-            return response[0]['generated_text']
-            
+            forecast_summary = self._summarize_forecast(weather_data)
+            prompt = settings.WEATHER_ALERT_PROMPT.format(weather_data=forecast_summary)
+            analysis_response = self.text_model.generate_content(prompt)
+            return analysis_response.text
         except Exception as e:
-            logging.error(f"Failed to analyze image with Hugging Face: {e}")
-            raise ConnectionError(f"Failed to analyze image: {e}")
+            logging.exception("Error analyzing weather data with Gemini")
+            return "Sorry, I couldn't analyze the weather data at the moment."
+
+    def _summarize_forecast(self, data: dict) -> str:
+        """Helper function to create a simple text summary from WeatherAPI.com data."""
+        location = data['location']['name']
+        summary = f"7-Day Weather Forecast for {location}:\n"
+        
+        for day_data in data['forecast']['forecastday']:
+            date = day_data['date']
+            day_info = day_data['day']
+            summary += (
+                f" - {date}: "
+                f"Avg Temp: {day_info['avgtemp_c']}°C, "
+                f"Max Wind: {day_info['maxwind_kph']} kph, "
+                f"Total Precip: {day_info['totalprecip_mm']} mm, "
+                f"Condition: {day_info['condition']['text']}\n"
+            )
+        return summary.strip()
 
     def get_answer(self, query: str) -> str:
-        context = self._retrieve_context(query)
-        if not context:
-            return "I could not find relevant information in my knowledge base to answer your question."
-
-        prompt = settings.QA_PROMPT_TEMPLATE.format(context=context, query=query)
-        logging.info(prompt)
-        return self._invoke_text_model(prompt)
+        """
+        Generates a detailed answer by performing a real-time web search.
+        """
+        logging.info(f"Initiating web search for query: '{query}'")
+        try:
+            web_context = search_the_web(query)
+            
+            if not web_context or "error" in web_context.lower():
+                return "I was unable to retrieve relevant information from the web to answer your query at this time."
+            prompt = settings.WEB_SEARCH_PROMPT_TEMPLATE.format(context=web_context, query=query)
+            response = self.text_model.generate_content(prompt)
+            return response.text
+        except Exception as e:
+            logging.error(f"An error occurred in the answer generation pipeline: {e}", exc_info=True)
+            raise ConnectionError(f"An unexpected error occurred while processing your request: {e}")
 
     def generate_predictive_answer(self, crop: str, parameter: str, change: str) -> str:
-        context_query = f"cultivation practices and environmental factors for {crop}"
-        context = self._retrieve_context(context_query)
-
-        if not context:
-            return f"I do not have enough information about {crop} to make a prediction."
-
+        """
+        Generates a predictive advisory by searching the web for context.
+        """
+        context_query = f"cultivation practices and environmental risk factors for {crop}"
+        logging.info(f"Initiating web search for predictive context: '{context_query}'")
+        
+        web_context = search_the_web(context_query)
+        if not web_context:
+            return f"I was unable to retrieve sufficient information about {crop} to generate a predictive analysis."
+        
         prompt = settings.PREDICTIVE_PROMPT_TEMPLATE.format(
-            crop=crop,
-            parameter=parameter,
-            change=change,
-            context=context,
+            crop=crop, parameter=parameter, change=change, context=web_context
         )
-        return self._invoke_text_model(prompt)
+        response = self.text_model.generate_content(prompt)
+        return response.text
 
     def analyze_image(self, image_bytes: bytes) -> str:
+        """
+        Analyzes a plant image using the Gemini Vision model and a professional prompt.
+        """
         try:
+            logging.info("Analyzing image with Gemini Vision...")
             prompt = settings.VISION_PROMPT
-            return self._invoke_vision_model(prompt, image_bytes)
-
+            img = Image.open(BytesIO(image_bytes))
+            
+            response = self.vision_model.generate_content([prompt, img])
+            return response.text
         except Exception as e:
-            logging.error(f"Error during image processing or analysis: {e}")
-            raise HTTPException(status_code=500, detail="Error processing image.")
+            logging.error(f"Error during image analysis: {e}", exc_info=True)
+            raise HTTPException(status_code=500, detail="Failed to process or analyze the image.")

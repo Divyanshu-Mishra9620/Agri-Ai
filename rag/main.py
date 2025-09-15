@@ -1,38 +1,23 @@
 import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from contextlib import asynccontextmanager
 
 from app.api.endpoints import chat
 from app.core.config import settings
-from app.utils.data_loader import download_and_process_pdfs
-from app.utils import knowledge_base
-from app.dependencies import app_state
 
+# Basic logging configuration
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    logging.info("Application startup...")
-    download_and_process_pdfs(settings.PDF_URLS, settings.DATA_DIR)
-    
-    collection = knowledge_base.build_or_load_knowledge_base()
-    
-    app_state["chroma_collection"] = collection
-    logging.info("Knowledge base is ready.")
-    
-    yield
-    
-    logging.info("Application shutdown.")
-    app_state.clear()
+# --- Lifespan logic for the knowledge base has been removed ---
 
+# Initialize the FastAPI application
 app = FastAPI(
     title=settings.PROJECT_NAME,
     description="An AI-powered agricultural assistant for SIH.",
-    version="1.0.0",
-    lifespan=lifespan
+    version="1.0.0"
 )
 
+# Add CORS middleware to allow all origins (as defined in your settings)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.ALLOWED_ORIGINS,
@@ -41,10 +26,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Include the API router for handling chat endpoints
 app.include_router(chat.router, prefix="/api")
 
-
+# Define a simple root endpoint for health checks
 @app.get("/", tags=["Root"])
 def read_root():
     return {"message": "Welcome to the Agri-AI Companion API!"}
-
