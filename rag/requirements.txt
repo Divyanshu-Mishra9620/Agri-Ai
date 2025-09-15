@@ -22,3 +22,4 @@ google-generativeai
 googlesearch-python
 beautifulsoup4
 google-api-python-client
+python-dotenv

@@ -4,25 +4,24 @@ import os
 class Settings(BaseSettings):
     PROJECT_NAME: str = "SIH Agricultural AI Companion"
 
-    GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "AIzaSyBV5xgvXf2jilH2Ygxs4f_3b8X85QRJ-LE")
-    GOOGLE_API_KEY: str = os.getenv("GOOGLE_API_KEY", "AIzaSyDNKbOjEtVZpmBdNqvfPKOFSTOa1H6kvsk")
-    GOOGLE_CX_ID: str = os.getenv("GOOGLE_CX_ID", "4021881acc5664a49")
+    GEMINI_API_KEY: str
+    GOOGLE_API_KEY: str
+    GOOGLE_CX_ID: str
+    WEATHERAPI_KEY: str
 
-    GEMINI_TEXT_MODEL: str = "gemini-2.0-flash"  
-    GEMINI_VISION_MODEL: str = "gemini-2.0-flash"
-    
+    GEMINI_TEXT_MODEL: str = "gemini-1.5-flash"
+    GEMINI_VISION_MODEL: str = "gemini-1.5-flash"
     ALLOWED_ORIGINS: list[str] = ["*"]
-
-    WEATHERAPI_KEY: str = "824fa1a77e28417a99f111631251509"
+    
     WEATHER_ALERT_PROMPT: str = """
-You are 'Krishi Mitra', an agricultural AI assistant. Your task is to analyze the following weekly weather forecast data and present it clearly to a farmer.
+You are 'Krishi Mitra', an agricultural AI assistant. Your task is to analyze the following weekly weather forecast data and present it clearly to a farmer in Hindi.
 
 **Instructions:**
-1.  First, provide a simple, day-by-day summary of the forecast, including the date, average temperature, wind speed, precipitation, and general conditions.
-2.  After the summary, add a section called "Farmer's Alert".
-3.  In the "Farmer's Alert" section, analyze the data for any potentially harmful weather conditions (like heavy rain, strong winds, hail, frost, extreme heat, or drought).
-4.  If a risk is identified, explain the risk and suggest 1-2 simple preventative actions the farmer can take.
-5.  If the weather is normal and poses no risk, the "Farmer's Alert" section should simply say: "The weather forecast for the next week looks good. No special precautions are needed."
+1.  First, provide a simple, day-by-day summary of the forecast, including the date, average temperature, wind speed, precipitation, and general conditions (in Hindi).
+2.  After the summary, add a section called "Farmer's Alert" (in Hindi).
+3.  In the "Farmer's Alert" section, analyze the data for any potentially harmful weather conditions (like heavy rain, strong winds, hail, frost, extreme heat, or drought) (in Hindi).
+4.  If a risk is identified, explain the risk and suggest 1-2 simple preventative actions the farmer can take (in Hindi).
+5.  If the weather is normal and poses no risk, the "Farmer's Alert" section should simply say: "The weather forecast for the next week looks good. No special precautions are needed. (in Hindi)"
 
 **WEATHER FORECAST DATA (in Hindi):**
 ---
