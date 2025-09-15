@@ -74,7 +74,7 @@ def load_processed_documents() -> list[str]:
             
             if full_text:
                 chunks = text_splitter.split_text(full_text)
-                cleaned_chunks = [chunk.strip() for chunk in chunks if len(chunk.strip()) > 50] # Minimum chunk length
+                cleaned_chunks = [chunk.strip() for chunk in chunks if len(chunk.strip()) > 50]
                 all_chunks.extend(cleaned_chunks)
                 logging.info(f"Processed '{filename}' into {len(cleaned_chunks)} chunks.")
 
