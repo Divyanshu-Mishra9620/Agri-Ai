@@ -61,17 +61,31 @@ class RAGSystem:
 
     def get_answer(self, query: str) -> str:
         """
-        Generates a detailed answer by performing a real-time web search.
+        Generates an answer by first querying the Gemini model directly,
+        and then falling back to a web search if the initial answer is insufficient.
         """
-        logging.info(f"Initiating web search for query: '{query}'")
         try:
+            logging.info(f"Attempting to get a direct answer for query: '{query}'")
+            direct_prompt = settings.DISTRICT_REPORT_PROMPT.format(district_name=query)
+            direct_response = self.text_model.generate_content(direct_prompt)
+            initial_answer = direct_response.text
+
+            refusal_keywords = ["I cannot", "I am unable", "I don't have enough information"]
+            if not any(keyword in initial_answer for keyword in refusal_keywords):
+                logging.info("Direct answer is sufficient. Returning to user.")
+                return initial_answer
+
+            logging.info(f"Direct answer was insufficient. Initiating web search for: '{query}'")
             web_context = search_the_web(query)
             
             if not web_context or "error" in web_context.lower():
-                return "I was unable to retrieve relevant information from the web to answer your query at this time."
-            prompt = settings.WEB_SEARCH_PROMPT_TEMPLATE.format(context=web_context, query=query)
-            response = self.text_model.generate_content(prompt)
-            return response.text
+                logging.warning("Web search failed or returned no results.")
+                return initial_answer
+            
+            web_prompt = settings.WEB_SEARCH_PROMPT_TEMPLATE.format(context=web_context, query=query)
+            final_response = self.text_model.generate_content(web_prompt)
+            return final_response.text
+
         except Exception as e:
             logging.error(f"An error occurred in the answer generation pipeline: {e}", exc_info=True)
             raise ConnectionError(f"An unexpected error occurred while processing your request: {e}")
