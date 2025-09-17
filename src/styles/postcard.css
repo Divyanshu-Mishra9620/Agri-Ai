@@ -1,0 +1,233 @@
+/* PostCard Enhanced Styles */
+
+.post-card-container {
+  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.95);
+}
+
+.post-card-container:hover {
+  backdrop-filter: blur(15px);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
+    0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+/* Smooth scrollbar for comments */
+.comments-container {
+  scrollbar-width: thin;
+  scrollbar-color: #e5e7eb #f9fafb;
+}
+
+.comments-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.comments-container::-webkit-scrollbar-track {
+  background: #f9fafb;
+  border-radius: 3px;
+}
+
+.comments-container::-webkit-scrollbar-thumb {
+  background: #e5e7eb;
+  border-radius: 3px;
+}
+
+.comments-container::-webkit-scrollbar-thumb:hover {
+  background: #d1d5db;
+}
+
+/* Vote button animations */
+.vote-button {
+  position: relative;
+  overflow: hidden;
+}
+
+.vote-button::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: rgba(59, 130, 246, 0.1);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: width 0.3s ease, height 0.3s ease;
+}
+
+.vote-button:hover::before {
+  width: 100%;
+  height: 100%;
+}
+
+/* Text selection styling */
+.post-content {
+  user-select: text;
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+}
+
+.post-content::selection {
+  background: rgba(34, 197, 94, 0.2);
+  color: #065f46;
+}
+
+/* Focus styles for accessibility */
+.focus-visible:focus {
+  outline: 2px solid #10b981;
+  outline-offset: 2px;
+}
+
+/* Loading animation */
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.loading {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Gradient text effect */
+.gradient-text {
+  background: linear-gradient(135deg, #10b981, #059669);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Hover effects for interactive elements */
+.interactive-hover {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.interactive-hover:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Mobile responsiveness */
+@media (max-width: 640px) {
+  .post-card-container {
+    margin: 0 0.5rem 1rem 0.5rem;
+  }
+
+  .vote-section {
+    min-width: 50px;
+    padding: 0.75rem 0.5rem;
+  }
+
+  .main-content {
+    padding: 1rem;
+  }
+
+  .action-buttons {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .comment-form {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .post-card-container {
+    background: rgba(31, 41, 55, 0.95);
+    border-color: #374151;
+    color: #f9fafb;
+  }
+
+  .post-card-container:hover {
+    background: rgba(31, 41, 55, 0.98);
+  }
+
+  .vote-section {
+    background: #1f2937;
+  }
+
+  .comment-input {
+    background: #374151;
+    border-color: #4b5563;
+    color: #f9fafb;
+  }
+
+  .comment-input::placeholder {
+    color: #9ca3af;
+  }
+}
+
+/* Animation keyframes */
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.slide-in-up {
+  animation: slideInUp 0.3s ease-out;
+}
+
+.fade-in {
+  animation: fadeIn 0.2s ease-out;
+}
+
+.scale-in {
+  animation: scaleIn 0.2s ease-out;
+}
+
+/* Custom scrollbar for the entire component */
+.post-card-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 #f1f5f9;
+}
+
+.post-card-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+
+.post-card-scroll::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 4px;
+}
+
+.post-card-scroll::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+.post-card-scroll::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
