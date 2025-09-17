@@ -45,7 +45,7 @@ const VoiceChatbot = () => {
 
       // Mock API call - replace with actual endpoint
       const response = await fetch(
-        "https://agri-ai-sigma.vercel.app/api/voice-chat/start-session",
+        "https://server-agri-ai.onrender.com/api/voice-chat/start-session",
         {
           method: "POST",
           headers: {
@@ -79,7 +79,7 @@ const VoiceChatbot = () => {
       if (currentSession) {
         // Mock API call
         await fetch(
-          "https://agri-ai-sigma.vercel.app/api/voice-chat/end-session",
+          "https://server-agri-ai.onrender.com/api/voice-chat/end-session",
           {
             method: "POST",
             headers: {
@@ -159,7 +159,7 @@ const VoiceChatbot = () => {
 
       // Mock API call - replace with actual endpoint
       const response = await fetch(
-        "https://agri-ai-sigma.vercel.app/api/voice-chat/process-audio",
+        "https://server-agri-ai.onrender.com/api/voice-chat/process-audio",
         {
           method: "POST",
           headers: {

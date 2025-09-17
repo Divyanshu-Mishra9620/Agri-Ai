@@ -1,4 +1,4 @@
-const api = "https://agri-ai-sigma.vercel.app";
+const api = "https://server-agri-ai.onrender.com";
 
 export const communityChatApi = {
   getChannels: (params = {}) => api.get("/community/channels", { params }),

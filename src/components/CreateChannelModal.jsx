@@ -60,7 +60,7 @@ const CreateChannelModal = ({ onClose, onChannelCreated }) => {
 
     try {
       const response = await fetch(
-        "https://agri-ai-sigma.vercel.app/api/community/channels",
+        "https://server-agri-ai.onrender.com/api/community/channels",
         {
           method: "POST",
           headers: {

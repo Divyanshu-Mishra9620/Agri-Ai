@@ -28,7 +28,7 @@ const ChannelSettingsModal = ({ channel, onClose, onChannelUpdated }) => {
     setLoading(true);
     try {
       const response = await fetch(
-        `https://agri-ai-sigma.vercel.app/api/community/channels/${channel.channelId}`,
+        `https://server-agri-ai.onrender.com/api/community/channels/${channel.channelId}`,
         {
           method: "PUT",
           headers: {
@@ -62,7 +62,7 @@ const ChannelSettingsModal = ({ channel, onClose, onChannelUpdated }) => {
 
     try {
       const response = await fetch(
-        `https://agri-ai-sigma.vercel.app/api/community/channels/${channel.channelId}/leave`,
+        `https://server-agri-ai.onrender.com/api/community/channels/${channel.channelId}/leave`,
         {
           method: "POST",
           headers: {

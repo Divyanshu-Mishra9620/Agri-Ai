@@ -8,7 +8,7 @@ export default defineConfig({
   //   server: {
   //   proxy: {
   //     '/api': {
-  //       target: 'https://agri-ai-sigma.vercel.app',
+  //       target: 'https://server-agri-ai.onrender.com',
   //       changeOrigin: true,
   //       secure: false,
   //     }

@@ -74,7 +74,7 @@ const CommunityChat = () => {
     try {
       setLoading(true);
       const response = await fetch(
-        "https://agri-ai-sigma.vercel.app/api/community/channels/my",
+        "https://server-agri-ai.onrender.com/api/community/channels/my",
         {
           headers: {
             //   'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -127,7 +127,7 @@ const CommunityChat = () => {
     try {
       setMessagesLoading(true);
       const response = await fetch(
-        `https://agri-ai-sigma.vercel.app/api/community/channels/${channelId}/messages?page=${page}&limit=50`,
+        `https://server-agri-ai.onrender.com/api/community/channels/${channelId}/messages?page=${page}&limit=50`,
         {
           headers: {
             //   'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -259,7 +259,7 @@ const CommunityChat = () => {
   const joinChannel = async (channelId) => {
     try {
       const response = await fetch(
-        `https://agri-ai-sigma.vercel.app/api/community/channels/${channelId}/join`,
+        `https://server-agri-ai.onrender.com/api/community/channels/${channelId}/join`,
         {
           method: "POST",
           headers: {
@@ -281,7 +281,7 @@ const CommunityChat = () => {
   const leaveChannel = async (channelId) => {
     try {
       const response = await fetch(
-        `https://agri-ai-sigma.vercel.app/api/community/channels/${channelId}/leave`,
+        `https://server-agri-ai.onrender.com/api/community/channels/${channelId}/leave`,
         {
           method: "POST",
           headers: {

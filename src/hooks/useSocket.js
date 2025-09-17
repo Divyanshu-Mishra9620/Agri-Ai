@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { io } from "socket.io-client";
 import { useSelector } from "react-redux";
 
-const SOCKET_URL = "https://agri-ai-sigma.vercel.app";
+const SOCKET_URL = "https://server-agri-ai.onrender.com";
 
 export const useSocket = () => {
   const socketRef = useRef(null);
