@@ -1,28 +1,37 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Mic, MicOff, Volume2, VolumeX, MessageCircle, User, Bot, Play, Pause } from 'lucide-react';
-import useAuth from '../hooks/useAuth';
+import React, { useState, useRef, useEffect } from "react";
+import {
+  Mic,
+  MicOff,
+  Volume2,
+  VolumeX,
+  MessageCircle,
+  User,
+  Bot,
+  Play,
+  Pause,
+} from "lucide-react";
+import useAuth from "../hooks/useAuth";
 
 const VoiceChatbot = () => {
-    const { user,accessToken } = useAuth();
+  const { user, accessToken } = useAuth();
   const [isRecording, setIsRecording] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [conversations, setConversations] = useState([]);
   const [currentSession, setCurrentSession] = useState(null);
-  const [language, setLanguage] = useState('hindi');
+  const [language, setLanguage] = useState("english");
   const [isLoading, setIsLoading] = useState(false);
-  const [connectionStatus, setConnectionStatus] = useState('disconnected');
-  
+  const [connectionStatus, setConnectionStatus] = useState("disconnected");
+
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
   const audioRef = useRef(null);
   const streamRef = useRef(null);
 
-
   useEffect(() => {
     return () => {
       if (streamRef.current) {
-        streamRef.current.getTracks().forEach(track => track.stop());
+        streamRef.current.getTracks().forEach((track) => track.stop());
       }
       if (currentSession) {
         endSession();
@@ -33,29 +42,32 @@ const VoiceChatbot = () => {
   const startSession = async () => {
     try {
       setIsLoading(true);
-      
+
       // Mock API call - replace with actual endpoint
-      const response = await fetch('http://localhost:5000/api/voice-chat/start-session', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${accessToken}`
-        },
-        body: JSON.stringify({ language })
-      });
-      
+      const response = await fetch(
+        "http://localhost:5000/api/voice-chat/start-session",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify({ language }),
+        }
+      );
+
       const data = await response.json();
-      
+
       if (data.success) {
         setCurrentSession(data.data);
-        setConnectionStatus('connected');
+        setConnectionStatus("connected");
         setConversations([]);
       }
     } catch (error) {
-      console.error('Error starting session:', error);
+      console.error("Error starting session:", error);
       // For demo purposes, create a mock session
-      setCurrentSession({ sessionId: 'mock-session-' + Date.now(), language });
-      setConnectionStatus('connected');
+      setCurrentSession({ sessionId: "mock-session-" + Date.now(), language });
+      setConnectionStatus("connected");
       setConversations([]);
     } finally {
       setIsLoading(false);
@@ -66,57 +78,59 @@ const VoiceChatbot = () => {
     try {
       if (currentSession) {
         // Mock API call
-        await fetch('http://localhost:5000/api/voice-chat/end-session', {
-          method: 'POST',
+        await fetch("http://localhost:5000/api/voice-chat/end-session", {
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${accessToken}`
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
           },
-          body: JSON.stringify({ sessionId: currentSession.sessionId })
+          body: JSON.stringify({ sessionId: currentSession.sessionId }),
         });
       }
     } catch (error) {
-      console.error('Error ending session:', error);
+      console.error("Error ending session:", error);
     } finally {
       setCurrentSession(null);
-      setConnectionStatus('disconnected');
+      setConnectionStatus("disconnected");
       if (streamRef.current) {
-        streamRef.current.getTracks().forEach(track => track.stop());
+        streamRef.current.getTracks().forEach((track) => track.stop());
       }
     }
   };
 
   const startRecording = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ 
+      const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
           echoCancellation: true,
           noiseSuppression: true,
-          autoGainControl: true
-        }
+          autoGainControl: true,
+        },
       });
-      
+
       streamRef.current = stream;
       mediaRecorderRef.current = new MediaRecorder(stream, {
-        mimeType: 'audio/webm;codecs=opus'
+        mimeType: "audio/webm;codecs=opus",
       });
-      
+
       audioChunksRef.current = [];
-      
+
       mediaRecorderRef.current.ondataavailable = (event) => {
         audioChunksRef.current.push(event.data);
       };
-      
+
       mediaRecorderRef.current.onstop = async () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        const audioBlob = new Blob(audioChunksRef.current, {
+          type: "audio/webm",
+        });
         await processAudio(audioBlob);
       };
-      
+
       mediaRecorderRef.current.start();
       setIsRecording(true);
     } catch (error) {
-      console.error('Error starting recording:', error);
-      alert('Microphone access is required for voice chat');
+      console.error("Error starting recording:", error);
+      alert("Microphone access is required for voice chat");
     }
   };
 
@@ -124,36 +138,39 @@ const VoiceChatbot = () => {
     if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.stop();
       setIsRecording(false);
-      
+
       if (streamRef.current) {
-        streamRef.current.getTracks().forEach(track => track.stop());
+        streamRef.current.getTracks().forEach((track) => track.stop());
       }
     }
   };
 
   const processAudio = async (audioBlob) => {
     if (!currentSession) return;
-    
+
     try {
       setIsLoading(true);
-      
+
       // Convert blob to base64
       const base64Audio = await blobToBase64(audioBlob);
-      
+
       // Mock API call - replace with actual endpoint
-      const response = await fetch('http://localhost:5000/api/voice-chat/process-audio', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${accessToken}`
-        },
-        body: JSON.stringify({
-          sessionId: currentSession.sessionId,
-          audioData: base64Audio,
-          language
-        })
-      });
-      
+      const response = await fetch(
+        "http://localhost:5000/api/voice-chat/process-audio",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify({
+            sessionId: currentSession.sessionId,
+            audioData: base64Audio,
+            language,
+          }),
+        }
+      );
+
       let data;
       if (response.ok) {
         data = await response.json();
@@ -163,38 +180,43 @@ const VoiceChatbot = () => {
           success: true,
           data: {
             userText: "नमस्कार, मेरी फसल में कीड़े लग गए हैं। क्या करूं?",
-            aiText: "आपकी फसल में कीड़ों की समस्या के लिए नीम का तेल का छिड़काव करें। साप्ताहिक रूप से शाम के समय छिड़काव करें। यदि समस्या बनी रहे तो कृषि विशेषज्ञ से सलाह लें।",
-            aiAudio: "mock-audio-response-base64"
-          }
+            aiText:
+              "आपकी फसल में कीड़ों की समस्या के लिए नीम का तेल का छिड़काव करें। साप्ताहिक रूप से शाम के समय छिड़काव करें। यदि समस्या बनी रहे तो कृषि विशेषज्ञ से सलाह लें।",
+            aiAudio: "mock-audio-response-base64",
+          },
         };
       }
-      
+
       if (data.success) {
         const newConversation = {
           id: Date.now(),
           userText: data.data.userText,
           aiText: data.data.aiText,
           aiAudio: data.data.aiAudio,
-          timestamp: new Date()
+          timestamp: new Date(),
         };
-        
-        setConversations(prev => [...prev, newConversation]);
-        
+
+        setConversations((prev) => [...prev, newConversation]);
+
         // Auto-play AI response if not muted
         if (!isMuted && data.data.aiAudio) {
           await playAudioResponse(data.data.aiAudio);
         }
       }
     } catch (error) {
-      console.error('Error processing audio:', error);
-      setConversations(prev => [...prev, {
-        id: Date.now(),
-        userText: "Audio processing failed",
-        aiText: language === 'hindi' 
-          ? "माफ करें, आपका संदेश समझने में कुछ समस्या आई। कृपया दोबारा कोशिश करें।"
-          : "Sorry, there was an issue understanding your message. Please try again.",
-        timestamp: new Date()
-      }]);
+      console.error("Error processing audio:", error);
+      setConversations((prev) => [
+        ...prev,
+        {
+          id: Date.now(),
+          userText: "Audio processing failed",
+          aiText:
+            language === "hindi"
+              ? "माफ करें, आपका संदेश समझने में कुछ समस्या आई। कृपया दोबारा कोशिश करें।"
+              : "Sorry, there was an issue understanding your message. Please try again.",
+          timestamp: new Date(),
+        },
+      ]);
     } finally {
       setIsLoading(false);
     }
@@ -203,22 +225,22 @@ const VoiceChatbot = () => {
   const playAudioResponse = async (base64Audio) => {
     try {
       // Convert base64 to blob and play
-      const audioBlob = base64ToBlob(base64Audio, 'audio/mp3');
+      const audioBlob = base64ToBlob(base64Audio, "audio/mp3");
       const audioUrl = URL.createObjectURL(audioBlob);
-      
+
       if (audioRef.current) {
         audioRef.current.src = audioUrl;
         setIsPlaying(true);
-        
+
         audioRef.current.onended = () => {
           setIsPlaying(false);
           URL.revokeObjectURL(audioUrl);
         };
-        
+
         await audioRef.current.play();
       }
     } catch (error) {
-      console.error('Error playing audio response:', error);
+      console.error("Error playing audio response:", error);
       setIsPlaying(false);
     }
   };
@@ -226,7 +248,7 @@ const VoiceChatbot = () => {
   const blobToBase64 = (blob) => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
-      reader.onload = () => resolve(reader.result.split(',')[1]);
+      reader.onload = () => resolve(reader.result.split(",")[1]);
       reader.onerror = reject;
       reader.readAsDataURL(blob);
     });
@@ -243,9 +265,9 @@ const VoiceChatbot = () => {
   };
 
   const formatTime = (date) => {
-    return date.toLocaleTimeString('en-IN', { 
-      hour: '2-digit', 
-      minute: '2-digit' 
+    return date.toLocaleTimeString("en-IN", {
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
@@ -262,21 +284,35 @@ const VoiceChatbot = () => {
                 <p className="text-green-100">Farmer Assistant Voice Chat</p>
               </div>
             </div>
-            
+
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-2">
-                <div className={`w-3 h-3 rounded-full ${connectionStatus === 'connected' ? 'bg-green-300' : 'bg-red-300'}`}></div>
-                <span className="text-sm">{connectionStatus === 'connected' ? 'Connected' : 'Disconnected'}</span>
+                <div
+                  className={`w-3 h-3 rounded-full ${
+                    connectionStatus === "connected"
+                      ? "bg-green-300"
+                      : "bg-red-300"
+                  }`}
+                ></div>
+                <span className="text-sm">
+                  {connectionStatus === "connected"
+                    ? "Connected"
+                    : "Disconnected"}
+                </span>
               </div>
-              
-              <select 
-                value={language} 
+
+              <select
+                value={language}
                 onChange={(e) => setLanguage(e.target.value)}
                 className="bg-white/20 text-white rounded-lg px-3 py-1 text-sm border border-white/30"
                 disabled={currentSession}
               >
-                <option value="hindi" className="text-black">हिंदी</option>
-                <option value="english" className="text-black">English</option>
+                <option value="hindi" className="text-black">
+                  हिंदी
+                </option>
+                <option value="english" className="text-black">
+                  English
+                </option>
               </select>
             </div>
           </div>
@@ -288,16 +324,14 @@ const VoiceChatbot = () => {
             <div className="text-center text-gray-500 py-12">
               <MessageCircle className="w-16 h-16 mx-auto mb-4 text-gray-300" />
               <p className="text-lg mb-2">
-                {language === 'hindi' 
-                  ? 'अपने सवाल पूछने के लिए माइक बटन दबाएं' 
-                  : 'Press the microphone button to ask your questions'
-                }
+                {language === "hindi"
+                  ? "अपने सवाल पूछने के लिए माइक बटन दबाएं"
+                  : "Press the microphone button to ask your questions"}
               </p>
               <p className="text-sm text-gray-400">
-                {language === 'hindi'
-                  ? 'फसल, बीमारी, उर्वरक आदि के बारे में पूछें'
-                  : 'Ask about crops, diseases, fertilizers, etc.'
-                }
+                {language === "hindi"
+                  ? "फसल, बीमारी, उर्वरक आदि के बारे में पूछें"
+                  : "Ask about crops, diseases, fertilizers, etc."}
               </p>
             </div>
           ) : (
@@ -330,7 +364,11 @@ const VoiceChatbot = () => {
                           className="text-green-100 hover:text-white"
                           disabled={isPlaying}
                         >
-                          {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+                          {isPlaying ? (
+                            <Pause className="w-4 h-4" />
+                          ) : (
+                            <Play className="w-4 h-4" />
+                          )}
                         </button>
                       )}
                     </div>
@@ -342,7 +380,7 @@ const VoiceChatbot = () => {
               </div>
             ))
           )}
-          
+
           {isLoading && (
             <div className="flex justify-center">
               <div className="bg-gray-200 px-4 py-2 rounded-full flex items-center space-x-2">
@@ -362,29 +400,39 @@ const VoiceChatbot = () => {
                 disabled={isLoading}
                 className="bg-green-500 hover:bg-green-600 text-white px-8 py-3 rounded-full font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isLoading ? 'Starting...' : 'Start Voice Chat'}
+                {isLoading ? "Starting..." : "Start Voice Chat"}
               </button>
             ) : (
               <>
                 <button
                   onClick={() => setIsMuted(!isMuted)}
                   className={`p-3 rounded-full transition-colors ${
-                    isMuted ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-600'
+                    isMuted
+                      ? "bg-red-100 text-red-600"
+                      : "bg-gray-100 text-gray-600"
                   }`}
                 >
-                  {isMuted ? <VolumeX className="w-6 h-6" /> : <Volume2 className="w-6 h-6" />}
+                  {isMuted ? (
+                    <VolumeX className="w-6 h-6" />
+                  ) : (
+                    <Volume2 className="w-6 h-6" />
+                  )}
                 </button>
 
                 <button
                   onClick={isRecording ? stopRecording : startRecording}
                   disabled={isLoading}
                   className={`p-4 rounded-full transition-all transform ${
-                    isRecording 
-                      ? 'bg-red-500 hover:bg-red-600 scale-110 animate-pulse shadow-lg' 
-                      : 'bg-green-500 hover:bg-green-600 hover:scale-105'
+                    isRecording
+                      ? "bg-red-500 hover:bg-red-600 scale-110 animate-pulse shadow-lg"
+                      : "bg-green-500 hover:bg-green-600 hover:scale-105"
                   } text-white disabled:opacity-50 disabled:cursor-not-allowed`}
                 >
-                  {isRecording ? <MicOff className="w-8 h-8" /> : <Mic className="w-8 h-8" />}
+                  {isRecording ? (
+                    <MicOff className="w-8 h-8" />
+                  ) : (
+                    <Mic className="w-8 h-8" />
+                  )}
                 </button>
 
                 <button
@@ -396,72 +444,70 @@ const VoiceChatbot = () => {
               </>
             )}
           </div>
-          
+
           <div className="text-center mt-4">
             <p className="text-sm text-gray-500">
-              {isRecording 
-                ? (language === 'hindi' ? 'सुन रहा हूं... बोलें' : 'Listening... Speak now')
-                : (language === 'hindi' 
-                  ? 'माइक बटन दबाएं और अपना सवाल पूछें' 
-                  : 'Press the mic button and ask your question'
-                )
-              }
+              {isRecording
+                ? language === "hindi"
+                  ? "सुन रहा हूं... बोलें"
+                  : "Listening... Speak now"
+                : language === "hindi"
+                ? "माइक बटन दबाएं और अपना सवाल पूछें"
+                : "Press the mic button and ask your question"}
             </p>
           </div>
         </div>
       </div>
 
       {/* Hidden audio element for playing AI responses */}
-      <audio ref={audioRef} style={{ display: 'none' }} />
-      
+      <audio ref={audioRef} style={{ display: "none" }} />
+
       {/* Quick Tips */}
       <div className="mt-6 bg-white rounded-2xl shadow-lg p-6">
         <h3 className="text-lg font-semibold text-gray-800 mb-4">
-          {language === 'hindi' ? 'सुझाव' : 'Quick Tips'}
+          {language === "hindi" ? "सुझाव" : "Quick Tips"}
         </h3>
         <div className="grid md:grid-cols-2 gap-4">
           <div className="bg-green-50 p-4 rounded-xl">
             <h4 className="font-medium text-green-800 mb-2">
-              {language === 'hindi' ? 'फसल संबंधी प्रश्न' : 'Crop Related Questions'}
+              {language === "hindi"
+                ? "फसल संबंधी प्रश्न"
+                : "Crop Related Questions"}
             </h4>
             <p className="text-sm text-green-600">
-              {language === 'hindi' 
-                ? 'बुआई, कटाई, बीज, उर्वरक के बारे में पूछें' 
-                : 'Ask about sowing, harvesting, seeds, fertilizers'
-              }
+              {language === "hindi"
+                ? "बुआई, कटाई, बीज, उर्वरक के बारे में पूछें"
+                : "Ask about sowing, harvesting, seeds, fertilizers"}
             </p>
           </div>
           <div className="bg-blue-50 p-4 rounded-xl">
             <h4 className="font-medium text-blue-800 mb-2">
-              {language === 'hindi' ? 'बीमारी और कीट' : 'Disease & Pests'}
+              {language === "hindi" ? "बीमारी और कीट" : "Disease & Pests"}
             </h4>
             <p className="text-sm text-blue-600">
-              {language === 'hindi' 
-                ? 'पौधों की बीमारियों और कीड़ों का इलाज जानें' 
-                : 'Learn about plant diseases and pest control'
-              }
+              {language === "hindi"
+                ? "पौधों की बीमारियों और कीड़ों का इलाज जानें"
+                : "Learn about plant diseases and pest control"}
             </p>
           </div>
           <div className="bg-yellow-50 p-4 rounded-xl">
             <h4 className="font-medium text-yellow-800 mb-2">
-              {language === 'hindi' ? 'मौसम की जानकारी' : 'Weather Information'}
+              {language === "hindi" ? "मौसम की जानकारी" : "Weather Information"}
             </h4>
             <p className="text-sm text-yellow-600">
-              {language === 'hindi' 
-                ? 'मौसम के अनुसार खेती की सलाह पाएं' 
-                : 'Get weather-based farming advice'
-              }
+              {language === "hindi"
+                ? "मौसम के अनुसार खेती की सलाह पाएं"
+                : "Get weather-based farming advice"}
             </p>
           </div>
           <div className="bg-purple-50 p-4 rounded-xl">
             <h4 className="font-medium text-purple-800 mb-2">
-              {language === 'hindi' ? 'सरकारी योजनाएं' : 'Government Schemes'}
+              {language === "hindi" ? "सरकारी योजनाएं" : "Government Schemes"}
             </h4>
             <p className="text-sm text-purple-600">
-              {language === 'hindi' 
-                ? 'किसानों के लिए योजनाओं की जानकारी' 
-                : 'Information about schemes for farmers'
-              }
+              {language === "hindi"
+                ? "किसानों के लिए योजनाओं की जानकारी"
+                : "Information about schemes for farmers"}
             </p>
           </div>
         </div>

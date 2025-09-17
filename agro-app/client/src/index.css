@@ -1,6 +1,7 @@
 @import "tailwindcss";
 
-
-@import './styles/global.css';
-@import './styles/components.css';
-@import './styles/animations.css'
+@import "./styles/global.css";
+@import "./styles/components.css";
+@import "./styles/animations.css";
+@import "./styles/postcard.css";
+@import "./styles/community.css";

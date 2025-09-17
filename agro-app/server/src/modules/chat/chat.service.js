@@ -293,7 +293,7 @@ function extractTopicsFromConversations(conversations) {
   conversations.forEach(conv => {
     conv.messages.forEach(msg => {
       if (msg.role === 'user') {
-        const content = msg.content.toLowerCase();
+        const content = msg?.content?.toLowerCase();
         if (content.includes('pest')) topics.add('pest_management');
         if (content.includes('crop')) topics.add('crop_selection');
         if (content.includes('soil')) topics.add('soil_health');
