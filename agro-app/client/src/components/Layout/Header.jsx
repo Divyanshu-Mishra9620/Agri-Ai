@@ -1,9 +1,9 @@
-import { NavLink, useNavigate } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
-import { useLogoutMutation } from '../../features/auth/authApi';
-import { clearCredentials } from '../../features/auth/authSlice';
-import LanguagueSelector from '../../features/languague/components/LanguagueSelector';
-import useTranslation from '../../hooks/useTranslation';
+import { NavLink, useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { useLogoutMutation } from "../../features/auth/authApi";
+import { clearCredentials } from "../../features/auth/authSlice";
+import LanguagueSelector from "../../features/languague/components/LanguagueSelector";
+import useTranslation from "../../hooks/useTranslation";
 
 export default function Header() {
   const dispatch = useDispatch();
@@ -17,14 +17,14 @@ export default function Header() {
       await logout().unwrap();
     } catch {}
     dispatch(clearCredentials());
-    navigate('/login');
+    navigate("/login");
   };
 
   const linkClasses = ({ isActive }) =>
     `font-medium ${
       isActive
-        ? 'text-green-700 border-b-2 border-green-700' // Active link style
-        : 'text-gray-700 hover:text-green-600'
+        ? "text-green-700 border-b-2 border-green-700" // Active link style
+        : "text-gray-700 hover:text-green-600"
     }`;
 
   return (
@@ -38,49 +38,51 @@ export default function Header() {
         </NavLink>
         <nav className="flex items-center gap-6">
           <NavLink to="/" className={linkClasses}>
-            {t('home')}
+            {t("home")}
           </NavLink>
           {user ? (
             <>
               <NavLink to="/trending-news" className={linkClasses}>
-                {t('agriTrending')}
+                {t("agriTrending")}
               </NavLink>
               <NavLink to="/disease-detection" className={linkClasses}>
-                {t('diseaseDetection')}
+                {t("diseaseDetection")}
               </NavLink>
               <NavLink to="/suggestions" className={linkClasses}>
-                {t('suggestions')}
+                {t("suggestions")}
               </NavLink>
-               <NavLink to="/community" className={linkClasses}>
-                {t('Community_chat') || 'Community Chat'}
+              <NavLink to="/community" className={linkClasses}>
+                {t("Community Chat") || "Community Chat"}
               </NavLink>
               <NavLink to="/profile" className={linkClasses}>
-                {t('profile')}
+                {t("profile")}
               </NavLink>
               <NavLink to="/voice-chat" className={linkClasses}>
-                {t('chatBot')}
+                {t("ChatBot")}
               </NavLink>
               <button
                 onClick={handleLogout}
                 className="px-4 py-2 rounded-lg bg-red-500 text-white hover:bg-red-600 font-medium"
               >
-                {t('logout')}
+                {t("logout")}
               </button>
             </>
           ) : (
             <>
               <NavLink to="/login" className={linkClasses}>
-                {t('login')}
+                {t("login")}
               </NavLink>
               <NavLink
                 to="/signup"
                 className={({ isActive }) =>
                   `px-4 py-2 rounded-lg text-white font-medium ${
-                    isActive ? 'bg-green-700' : 'bg-green-600 hover:bg-green-700'
+                    isActive
+                      ? "bg-green-700"
+                      : "bg-green-600 hover:bg-green-700"
                   }`
                 }
               >
-                {t('signup')}
+                {t("signup")}
               </NavLink>
             </>
           )}
