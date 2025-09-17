@@ -1,10 +1,14 @@
+<<<<<<< HEAD
 import React from 'react';
 import { motion } from 'framer-motion';
+=======
+>>>>>>> 94d473ce04d6ac32fbdd4070ec6afde3e0326c9e
 import Header from './Header';
 import Footer from './Footer';
 
 export default function Layout({ children }) {
   return (
+<<<<<<< HEAD
     <div className="min-h-screen bg-gradient-to-br from-green-50/30 via-white to-emerald-50/30 relative overflow-hidden">
       {/* Clean floating elements - matching homepage */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
@@ -54,6 +58,11 @@ export default function Layout({ children }) {
       </motion.main>
       
       {/* Footer */}
+=======
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
+      <Header />
+      <main className="container px-4 py-8 animate-fadeIn">{children}</main>
+>>>>>>> 94d473ce04d6ac32fbdd4070ec6afde3e0326c9e
       <Footer />
     </div>
   );

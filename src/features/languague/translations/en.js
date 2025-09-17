@@ -131,6 +131,7 @@ export default {
 
   // Header section
   govt_schemes_badge: "Government Initiatives",
+<<<<<<< HEAD
   govt_schemes_title: "Government Schemes for Farmers",
   govt_schemes_subtitle: "Comprehensive support programs designed to empower farmers and boost agricultural productivity across India",
 
@@ -152,12 +153,35 @@ export default {
   // General
   schemes_available: "Schemes Available",
 
+=======
+  govt_schemes_title: "Government Schemes for Farmers", 
+  govt_schemes_subtitle: "Comprehensive support programs designed to empower farmers and boost agricultural productivity across India",
+  
+  // Stats
+  active_schemes: "Active Schemes",
+  beneficiaries: "Beneficiaries", 
+  budget_allocated: "Budget Allocated",
+  states_covered: "States Covered",
+  
+  // Sectors
+  sector_direct_income_support: "Direct Income Support",
+  sector_crop_insurance: "Crop Insurance", 
+  sector_credit_finance: "Credit & Finance",
+  sector_technology_digital: "Technology & Digital",
+  sector_water_solar: "Water & Solar",
+  
+  // General
+  schemes_available: "Schemes Available",
+  translatedHeadlines: "Translated Headlines",
+  
+>>>>>>> 94d473ce04d6ac32fbdd4070ec6afde3e0326c9e
   // CTA section
   need_help_title: "Need Help with Applications?",
   need_help_desc: "Our support team can guide you through the application process for any government scheme",
   get_support: "Get Support",
   download_guide: "Download Guide",
 
+<<<<<<< HEAD
   // Farmer Profile Management
   farmerProfileManagement: "Farmer Profile Management",
   yourFarmProfile: "Your Farm Profile",
@@ -200,4 +224,33 @@ export default {
   noProfileFoundDescription: "We couldn't find your profile. Please contact support or try logging in again.",
   goToHome: "Go to Home",
   saveChanges: "Save Changes"
+=======
+  
+  // Additional keys for new schemes
+  sector_machinery__equipment: "Machinery & Equipment",
+  sector_market_support: "Market Support", 
+  
+  // Enhanced existing keys
+  govt_schemes_badge: "Government Initiatives",
+  govt_schemes_title: "Government Schemes for Farmers",
+  govt_schemes_subtitle: "Comprehensive support programs designed to empower farmers and boost agricultural productivity across India",
+  
+  // Stats section
+  active_schemes: "Active Schemes",
+  beneficiaries: "Beneficiaries",
+  budget_allocated: "Budget Allocated", 
+  states_covered: "States Covered",
+  
+  // General
+  schemes_available: "Schemes Available",
+  translatedHeadlines: "Translated Headlines",
+  
+  // Call to action
+  need_help_title: "Need Help with Applications?",
+  need_help_desc: "Our support team can guide you through the application process for any government scheme",
+  get_support: "Get Support",
+  download_guide: "Download Guide",
+
+
+>>>>>>> 94d473ce04d6ac32fbdd4070ec6afde3e0326c9e
 };

@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import React, { useState } from 'react';
 import { X, Hash, AlertCircle } from 'lucide-react';
 import useAuth from '../hooks/useAuth';
@@ -21,6 +22,31 @@ const CreateChannelModal = ({ onClose, onChannelCreated }) => {
     description: '',
     category: 'general_discussion',
     icon: '💬'
+=======
+import React, { useState } from "react";
+import { X, Hash, AlertCircle } from "lucide-react";
+import useAuth from "../hooks/useAuth";
+
+const categories = [
+  { value: "crop_cultivation", label: "Crop Cultivation", emoji: "🌾" },
+  { value: "pest_management", label: "Pest Management", emoji: "🐛" },
+  { value: "weather_discussion", label: "Weather Discussion", emoji: "🌤️" },
+  { value: "market_prices", label: "Market Prices", emoji: "💰" },
+  { value: "farming_techniques", label: "Farming Techniques", emoji: "🚜" },
+  { value: "equipment_tools", label: "Equipment & Tools", emoji: "🔧" },
+  { value: "organic_farming", label: "Organic Farming", emoji: "🌱" },
+  { value: "government_schemes", label: "Government Schemes", emoji: "📋" },
+  { value: "general_discussion", label: "General Discussion", emoji: "💬" },
+];
+
+const CreateChannelModal = ({ onClose, onChannelCreated }) => {
+  const { user, accessToken } = useAuth();
+  const [formData, setFormData] = useState({
+    name: "",
+    description: "",
+    category: "general_discussion",
+    icon: "💬",
+>>>>>>> 94d473ce04d6ac32fbdd4070ec6afde3e0326c9e
   });
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
@@ -29,6 +55,7 @@ const CreateChannelModal = ({ onClose, onChannelCreated }) => {
     const newErrors = {};
 
     if (!formData.name.trim()) {
+<<<<<<< HEAD
       newErrors.name = 'Channel name is required';
     } else if (formData.name.trim().length < 3) {
       newErrors.name = 'Channel name must be at least 3 characters';
@@ -46,6 +73,25 @@ const CreateChannelModal = ({ onClose, onChannelCreated }) => {
 
     if (!formData.category) {
       newErrors.category = 'Category is required';
+=======
+      newErrors.name = "Channel name is required";
+    } else if (formData.name.trim().length < 3) {
+      newErrors.name = "Channel name must be at least 3 characters";
+    } else if (formData.name.trim().length > 50) {
+      newErrors.name = "Channel name must be less than 50 characters";
+    }
+
+    if (!formData.description.trim()) {
+      newErrors.description = "Description is required";
+    } else if (formData.description.trim().length < 10) {
+      newErrors.description = "Description must be at least 10 characters";
+    } else if (formData.description.trim().length > 200) {
+      newErrors.description = "Description must be less than 200 characters";
+    }
+
+    if (!formData.category) {
+      newErrors.category = "Category is required";
+>>>>>>> 94d473ce04d6ac32fbdd4070ec6afde3e0326c9e
     }
 
     setErrors(newErrors);
@@ -59,6 +105,7 @@ const CreateChannelModal = ({ onClose, onChannelCreated }) => {
     setErrors({});
 
     try {
+<<<<<<< HEAD
       const response = await fetch('http://localhost:5000/api/community/channels', {
         method: 'POST',
         headers: {
@@ -73,6 +120,25 @@ const CreateChannelModal = ({ onClose, onChannelCreated }) => {
           icon: formData.icon
         })
       });
+=======
+      const response = await fetch(
+        "https://server-agri-ai.onrender.com/api/community/channels",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            //   'Authorization': `Bearer ${localStorage.getItem('token')}`
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify({
+            name: formData.name.trim(),
+            description: formData.description.trim(),
+            category: formData.category,
+            icon: formData.icon,
+          }),
+        }
+      );
+>>>>>>> 94d473ce04d6ac32fbdd4070ec6afde3e0326c9e
 
       const data = await response.json();
 
@@ -81,23 +147,37 @@ const CreateChannelModal = ({ onClose, onChannelCreated }) => {
       } else {
         if (data.errors) {
           const fieldErrors = {};
+<<<<<<< HEAD
           data.errors.forEach(error => {
+=======
+          data.errors.forEach((error) => {
+>>>>>>> 94d473ce04d6ac32fbdd4070ec6afde3e0326c9e
             fieldErrors[error.path] = error.msg;
           });
           setErrors(fieldErrors);
         } else {
+<<<<<<< HEAD
           setErrors({ general: data.message || 'Failed to create channel' });
         }
       }
     } catch (error) {
       console.error('Create channel error:', error);
       setErrors({ general: 'Network error. Please try again.' });
+=======
+          setErrors({ general: data.message || "Failed to create channel" });
+        }
+      }
+    } catch (error) {
+      console.error("Create channel error:", error);
+      setErrors({ general: "Network error. Please try again." });
+>>>>>>> 94d473ce04d6ac32fbdd4070ec6afde3e0326c9e
     } finally {
       setLoading(false);
     }
   };
 
   const handleInputChange = (field, value) => {
+<<<<<<< HEAD
     setFormData(prev => ({ ...prev, [field]: value }));
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: '' }));
@@ -105,6 +185,17 @@ const CreateChannelModal = ({ onClose, onChannelCreated }) => {
   };
 
   const selectedCategory = categories.find(cat => cat.value === formData.category);
+=======
+    setFormData((prev) => ({ ...prev, [field]: value }));
+    if (errors[field]) {
+      setErrors((prev) => ({ ...prev, [field]: "" }));
+    }
+  };
+
+  const selectedCategory = categories.find(
+    (cat) => cat.value === formData.category
+  );
+>>>>>>> 94d473ce04d6ac32fbdd4070ec6afde3e0326c9e
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -113,7 +204,13 @@ const CreateChannelModal = ({ onClose, onChannelCreated }) => {
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <div className="flex items-center gap-3">
             <Hash className="w-6 h-6 text-green-600" />
+<<<<<<< HEAD
             <h2 className="text-xl font-semibold text-gray-800">Create Channel</h2>
+=======
+            <h2 className="text-xl font-semibold text-gray-800">
+              Create Channel
+            </h2>
+>>>>>>> 94d473ce04d6ac32fbdd4070ec6afde3e0326c9e
           </div>
           <button
             onClick={onClose}
@@ -141,17 +238,30 @@ const CreateChannelModal = ({ onClose, onChannelCreated }) => {
             <input
               type="text"
               value={formData.name}
+<<<<<<< HEAD
               onChange={(e) => handleInputChange('name', e.target.value)}
               placeholder="e.g., Rice Cultivation Tips"
               className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent ${
                 errors.name ? 'border-red-300 bg-red-50' : 'border-gray-300'
+=======
+              onChange={(e) => handleInputChange("name", e.target.value)}
+              placeholder="e.g., Rice Cultivation Tips"
+              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent ${
+                errors.name ? "border-red-300 bg-red-50" : "border-gray-300"
+>>>>>>> 94d473ce04d6ac32fbdd4070ec6afde3e0326c9e
               }`}
               maxLength={50}
             />
             {errors.name && (
               <p className="mt-1 text-sm text-red-600">{errors.name}</p>
             )}
+<<<<<<< HEAD
             <p className="mt-1 text-xs text-gray-500">{formData.name.length}/50 characters</p>
+=======
+            <p className="mt-1 text-xs text-gray-500">
+              {formData.name.length}/50 characters
+            </p>
+>>>>>>> 94d473ce04d6ac32fbdd4070ec6afde3e0326c9e
           </div>
 
           {/* Description */}
@@ -161,18 +271,34 @@ const CreateChannelModal = ({ onClose, onChannelCreated }) => {
             </label>
             <textarea
               value={formData.description}
+<<<<<<< HEAD
               onChange={(e) => handleInputChange('description', e.target.value)}
               placeholder="Describe what this channel is about..."
               rows={3}
               className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none ${
                 errors.description ? 'border-red-300 bg-red-50' : 'border-gray-300'
+=======
+              onChange={(e) => handleInputChange("description", e.target.value)}
+              placeholder="Describe what this channel is about..."
+              rows={3}
+              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none ${
+                errors.description
+                  ? "border-red-300 bg-red-50"
+                  : "border-gray-300"
+>>>>>>> 94d473ce04d6ac32fbdd4070ec6afde3e0326c9e
               }`}
               maxLength={200}
             />
             {errors.description && (
               <p className="mt-1 text-sm text-red-600">{errors.description}</p>
             )}
+<<<<<<< HEAD
             <p className="mt-1 text-xs text-gray-500">{formData.description.length}/200 characters</p>
+=======
+            <p className="mt-1 text-xs text-gray-500">
+              {formData.description.length}/200 characters
+            </p>
+>>>>>>> 94d473ce04d6ac32fbdd4070ec6afde3e0326c9e
           </div>
 
           {/* Category */}
@@ -183,6 +309,7 @@ const CreateChannelModal = ({ onClose, onChannelCreated }) => {
             <select
               value={formData.category}
               onChange={(e) => {
+<<<<<<< HEAD
                 const category = categories.find(cat => cat.value === e.target.value);
                 handleInputChange('category', e.target.value);
                 handleInputChange('icon', category?.emoji || '💬');
@@ -192,6 +319,19 @@ const CreateChannelModal = ({ onClose, onChannelCreated }) => {
               }`}
             >
               {categories.map(category => (
+=======
+                const category = categories.find(
+                  (cat) => cat.value === e.target.value
+                );
+                handleInputChange("category", e.target.value);
+                handleInputChange("icon", category?.emoji || "💬");
+              }}
+              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent ${
+                errors.category ? "border-red-300 bg-red-50" : "border-gray-300"
+              }`}
+            >
+              {categories.map((category) => (
+>>>>>>> 94d473ce04d6ac32fbdd4070ec6afde3e0326c9e
                 <option key={category.value} value={category.value}>
                   {category.emoji} {category.label}
                 </option>
@@ -237,7 +377,11 @@ const CreateChannelModal = ({ onClose, onChannelCreated }) => {
                   Creating...
                 </span>
               ) : (
+<<<<<<< HEAD
                 'Create Channel'
+=======
+                "Create Channel"
+>>>>>>> 94d473ce04d6ac32fbdd4070ec6afde3e0326c9e
               )}
             </button>
           </div>
@@ -247,4 +391,8 @@ const CreateChannelModal = ({ onClose, onChannelCreated }) => {
   );
 };
 
+<<<<<<< HEAD
 export default CreateChannelModal;
+=======
+export default CreateChannelModal;
+>>>>>>> 94d473ce04d6ac32fbdd4070ec6afde3e0326c9e

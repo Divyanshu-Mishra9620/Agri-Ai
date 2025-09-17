@@ -1,6 +1,14 @@
 @import "tailwindcss";
 
+<<<<<<< HEAD
 
 @import './styles/global.css';
 @import './styles/components.css';
 @import './styles/animations.css'
+=======
+@import "./styles/global.css";
+@import "./styles/components.css";
+@import "./styles/animations.css";
+@import "./styles/postcard.css";
+@import "./styles/community.css";
+>>>>>>> 94d473ce04d6ac32fbdd4070ec6afde3e0326c9e

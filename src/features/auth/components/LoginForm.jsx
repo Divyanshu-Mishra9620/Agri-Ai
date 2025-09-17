@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, Link } from 'react-router-dom';
+<<<<<<< HEAD
 import { motion, AnimatePresence } from 'framer-motion';
+=======
+>>>>>>> 94d473ce04d6ac32fbdd4070ec6afde3e0326c9e
 import { useLoginMutation } from '../authApi';
 import { setCredentials } from '../authSlice';
 import Input from '../../../components/UI/Input';
@@ -10,6 +13,10 @@ import { Mail, Lock, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { VALIDATION_MESSAGES } from '../../../utils/ValidationMessages';
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> 94d473ce04d6ac32fbdd4070ec6afde3e0326c9e
 export default function LoginForm() {
   const [login, { isLoading }] = useLoginMutation();
   const dispatch = useDispatch();
@@ -59,6 +66,10 @@ export default function LoginForm() {
     e.preventDefault();
     setError(null);
 
+<<<<<<< HEAD
+=======
+   
+>>>>>>> 94d473ce04d6ac32fbdd4070ec6afde3e0326c9e
     if (formErrors.email || formErrors.password || !form.email || !form.password) {
       toast.error(t('fillValidFields') || 'Please fill valid fields');
       return;
@@ -86,6 +97,7 @@ export default function LoginForm() {
   };
 
   return (
+<<<<<<< HEAD
     <div className="min-h-screen bg-gradient-to-br from-green-50/30 via-white to-emerald-50/30 relative overflow-hidden">
       {/* Clean floating elements - matching homepage */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
@@ -333,6 +345,95 @@ export default function LoginForm() {
             </div>
           </motion.div>
         </motion.div>
+=======
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 to-green-100 px-4">
+      <div className="w-full max-w-md">
+        <div className="bg-white p-8 rounded-3xl shadow-lg animate-fadeIn">
+          {/* Header */}
+          <div className="text-center mb-6">
+            <div className="text-5xl mb-3">🌾</div>
+            <h2 className="text-2xl font-bold text-gray-800">{t('login')}</h2>
+            <p className="text-sm text-gray-500 mt-1">{t('welcomeBack')}</p>
+          </div>
+
+          {/* Error */}
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 p-4 mb-4 rounded-lg animate-shake">
+              {error}
+            </div>
+          )}
+
+          {/* Form */}
+          <form onSubmit={onSubmit} className="space-y-5">
+            {/* Email */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">{t('email')}</label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-3.5 w-5 h-5 text-gray-400" />
+                <Input
+                  type="email"
+                  name="email"
+                  value={form.email}
+                  onChange={handleChange}
+                  required
+                  className={`pl-10 ${formErrors.email ? 'border-red-500' : ''}`}
+                  placeholder="you@example.com"
+                />
+              </div>
+              {formErrors.email && (
+                <p className="text-red-500 text-sm mt-1">{formErrors.email}</p>
+              )}
+            </div>
+
+            {/* Password */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">{t('password')}</label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-3.5 w-5 h-5 text-gray-400" />
+                <Input
+                  type="password"
+                  name="password"
+                  value={form.password}
+                  onChange={handleChange}
+                  required
+                  className={`pl-10 ${formErrors.password ? 'border-red-500' : ''}`}
+                  placeholder="••••••••"
+                />
+              </div>
+              {formErrors.password && (
+                <p className="text-red-500 text-sm mt-1">{formErrors.password}</p>
+              )}
+            </div>
+
+            {/* Button */}
+            <button
+              type="submit"
+              disabled={!isFormValid() || isLoading}
+              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-emerald-600 text-white font-semibold hover:bg-emerald-700 transition disabled:opacity-60"
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  {t('loggingIn')}
+                </>
+              ) : (
+                t('login')
+              )}
+            </button>
+          </form>
+
+          {/* Footer */}
+          <div className="mt-6 text-center text-sm">
+            <span className="text-gray-600">{t('dontHaveAccount')} </span>
+            <Link
+              to="/signup"
+              className="text-emerald-600 hover:text-emerald-700 font-medium"
+            >
+              {t('signup')}
+            </Link>
+          </div>
+        </div>
+>>>>>>> 94d473ce04d6ac32fbdd4070ec6afde3e0326c9e
       </div>
     </div>
   );

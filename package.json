@@ -15,6 +15,10 @@
     "@tailwindcss/vite": "^4.1.13",
     "axios": "^1.11.0",
     "clsx": "^2.1.1",
+<<<<<<< HEAD
+=======
+    "d3": "^7.9.0",
+>>>>>>> 94d473ce04d6ac32fbdd4070ec6afde3e0326c9e
     "date-fns": "^4.1.0",
     "framer-motion": "^12.23.12",
     "india-state-district": "^1.0.4",
@@ -25,6 +29,10 @@
     "react-dom": "^19.1.1",
     "react-hook-form": "^7.62.0",
     "react-hot-toast": "^2.6.0",
+<<<<<<< HEAD
+=======
+    "react-icons": "^5.5.0",
+>>>>>>> 94d473ce04d6ac32fbdd4070ec6afde3e0326c9e
     "react-redux": "^9.2.0",
     "react-router-dom": "^7.8.2",
     "socket.io-client": "^4.8.1",

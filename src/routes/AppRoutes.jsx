@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import { Routes, Route } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import Login from '../pages/Login';
@@ -11,6 +12,22 @@ import ProtectedRoute from './ProtectedRoute';
 import TrendingNews from '../pages/TrendingNews/TrendingNews';
 import CommunityChat from '../pages/CommunityChat';
 import VoiceChatbot from '../pages/VoiceChatbot';
+=======
+import { Routes, Route } from "react-router-dom";
+import { useSelector } from "react-redux";
+import Login from "../pages/Login";
+import Signup from "../pages/Signup";
+import Home from "../pages/Home";
+import Profile from "../pages/Profile";
+import DiseaseDetection from "../pages/DiseaseDetection";
+import Suggestions from "../pages/Suggestion";
+
+import ProtectedRoute from "./ProtectedRoute";
+import TrendingNews from "../pages/TrendingNews/TrendingNews";
+// import CommunityChat from '../pages/CommunityChat';
+import VoiceChatbot from "../pages/VoiceChatbot";
+import { CommunityPage } from "../components/community/CommunityPage";
+>>>>>>> 94d473ce04d6ac32fbdd4070ec6afde3e0326c9e
 
 export default function AppRoutes() {
   const user = useSelector((state) => state.auth.user);
@@ -55,6 +72,7 @@ export default function AppRoutes() {
           </ProtectedRoute>
         }
       />
+<<<<<<< HEAD
       {/* <Route 
   path="/community" 
   element={
@@ -63,6 +81,16 @@ export default function AppRoutes() {
     </ProtectedRoute>
   } 
 /> */}
+=======
+      <Route
+        path="/community"
+        element={
+          <ProtectedRoute>
+            <CommunityPage />
+          </ProtectedRoute>
+        }
+      />
+>>>>>>> 94d473ce04d6ac32fbdd4070ec6afde3e0326c9e
 
       <Route
         path="/voice-chat"
@@ -74,4 +102,8 @@ export default function AppRoutes() {
       />
     </Routes>
   );
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> 94d473ce04d6ac32fbdd4070ec6afde3e0326c9e

@@ -1,4 +1,5 @@
 import React from 'react';
+<<<<<<< HEAD
 import { motion } from 'framer-motion';
 import useTranslation from '../../../hooks/useTranslation';
 
@@ -61,5 +62,16 @@ export default function ProfileCard({ label, value, icon, className = "" }) {
       {/* Shine Effect */}
       <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
     </motion.div>
+=======
+import useTranslation from '../../../hooks/useTranslation';
+
+export default function ProfileCard({ label, value }) {
+  const t = useTranslation();
+  return (
+    <div className="bg-gray-50 p-4 rounded-lg">
+      <label className="text-sm font-medium text-gray-500 uppercase tracking-wide">{t(label)}</label>
+      <p className="text-lg text-gray-800 font-medium">{value}</p>
+    </div>
+>>>>>>> 94d473ce04d6ac32fbdd4070ec6afde3e0326c9e
   );
 }

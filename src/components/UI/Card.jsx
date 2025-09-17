@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import React from 'react';
 import { motion } from 'framer-motion';
 
@@ -147,4 +148,8 @@ export function ImageCard({ image, title, description, children, ...props }) {
       </div>
     </Card>
   );
+=======
+export default function Card({ className = '', ...props }) {
+  return <div {...props} className={`card p-6 rounded-2xl shadow-lg ${className}`} />;
+>>>>>>> 94d473ce04d6ac32fbdd4070ec6afde3e0326c9e
 }
