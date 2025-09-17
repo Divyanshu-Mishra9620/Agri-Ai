@@ -6,6 +6,14 @@ import { SchemeCard } from "./components/NewsCard";
 import useTranslation from "../../hooks/useTranslation";
 import { useSelector } from "react-redux";
 
+const sectorNames = {
+  "Credit Finance": "Finance and Credit Sector",
+  Insurance: "Water and Insurance Sector",
+  Agriculture: "Agriculture Development Sector",
+  Irrigation: "Irrigation and Water Sector",
+  // add more mappings as needed
+};
+
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
@@ -128,12 +136,8 @@ export default function TrendingNews() {
                   {group.icon}
                 </div>
                 <div className="flex-1">
-                  <h2 className="text-3xl font-bold text-gray-800 mb-2">
-                    {t(
-                      `sector_${group?.sector
-                        ?.toLowerCase()
-                        ?.replace(/\s+/g, "_")}`
-                    ) || group?.sector}
+                  <h2 className="text-4xl font-black text-gray-800 mb-3 leading-tight">
+                    {sectorNames[group.sector] || group.sector}
                   </h2>
                   <div className="flex items-center gap-3">
                     <span className="text-sm px-3 py-1 rounded-full bg-white/70 text-gray-700 font-medium backdrop-blur border border-white/50">
