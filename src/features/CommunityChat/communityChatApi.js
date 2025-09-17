@@ -1,62 +1,53 @@
-
-
-const api ='http://localhost:5000';
+const api = "https://agri-ai-sigma.vercel.app";
 
 export const communityChatApi = {
+  getChannels: (params = {}) => api.get("/community/channels", { params }),
 
-  getChannels: (params = {}) => 
-    api.get('/community/channels', { params }),
+  getChannel: (channelId) => api.get(`/community/channels/${channelId}`),
 
-  getChannel: (channelId) => 
-    api.get(`/community/channels/${channelId}`),
+  createChannel: (data) => api.post("/community/channels", data),
 
-  createChannel: (data) => 
-    api.post('/community/channels', data),
-
-  updateChannel: (channelId, data) => 
+  updateChannel: (channelId, data) =>
     api.put(`/community/channels/${channelId}`, data),
 
-  getUserChannels: () => 
-    api.get('/community/channels/my'),
+  getUserChannels: () => api.get("/community/channels/my"),
 
   // Channel membership
-  joinChannel: (channelId) => 
-    api.post(`/community/channels/${channelId}/join`),
+  joinChannel: (channelId) => api.post(`/community/channels/${channelId}/join`),
 
-  leaveChannel: (channelId) => 
+  leaveChannel: (channelId) =>
     api.post(`/community/channels/${channelId}/leave`),
 
-  getChannelMembers: (channelId, params = {}) => 
+  getChannelMembers: (channelId, params = {}) =>
     api.get(`/community/channels/${channelId}/members`, { params }),
 
   // Messages
-  getChannelMessages: (channelId, params = {}) => 
+  getChannelMessages: (channelId, params = {}) =>
     api.get(`/community/channels/${channelId}/messages`, { params }),
 
-  sendMessage: (channelId, data) => 
+  sendMessage: (channelId, data) =>
     api.post(`/community/channels/${channelId}/messages`, data),
 
-  deleteMessage: (messageId) => 
-    api.delete(`/community/messages/${messageId}`),
+  deleteMessage: (messageId) => api.delete(`/community/messages/${messageId}`),
 
   // Reactions
-  addReaction: (messageId, emoji) => 
+  addReaction: (messageId, emoji) =>
     api.post(`/community/messages/${messageId}/reactions`, { emoji }),
 
-  removeReaction: (messageId, emoji) => 
-    api.delete(`/community/messages/${messageId}/reactions`, { 
-      data: { emoji } 
+  removeReaction: (messageId, emoji) =>
+    api.delete(`/community/messages/${messageId}/reactions`, {
+      data: { emoji },
     }),
 
   // Search
-  searchMessages: (query, params = {}) => 
-    api.get('/community/search/messages', { 
-      params: { query, ...params } 
+  searchMessages: (query, params = {}) =>
+    api.get("/community/search/messages", {
+      params: { query, ...params },
     }),
 
   // Analytics (for moderators)
-  getChannelAnalytics: (channelId, days = 7) => 
-    api.get(`/community/channels/${channelId}/analytics`, { 
-      params: { days } 
-    })
+  getChannelAnalytics: (channelId, days = 7) =>
+    api.get(`/community/channels/${channelId}/analytics`, {
+      params: { days },
+    }),
 };

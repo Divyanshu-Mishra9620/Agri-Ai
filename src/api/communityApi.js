@@ -1,4 +1,5 @@
-const API_BASE_URL = "http://localhost:5000/api";
+const API_BASE_URL =
+  process.env.API_BASE_URL || "https://agri-ai-sigma.vercel.app/api";
 
 export const fetchAllPosts = async (page = 1, limit = 10) => {
   try {

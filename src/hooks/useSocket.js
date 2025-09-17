@@ -1,46 +1,46 @@
 // hooks/useSocket.js
-import { useEffect, useRef, useState } from 'react';
-import { io } from 'socket.io-client';
-import { useSelector } from 'react-redux';
+import { useEffect, useRef, useState } from "react";
+import { io } from "socket.io-client";
+import { useSelector } from "react-redux";
 
-const SOCKET_URL = 'http://localhost:5000';
+const SOCKET_URL = "https://agri-ai-sigma.vercel.app";
 
 export const useSocket = () => {
   const socketRef = useRef(null);
   const [isConnected, setIsConnected] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
-  const { accessToken } = useSelector(state => state.auth);
+  const { accessToken } = useSelector((state) => state.auth);
 
   useEffect(() => {
     if (accessToken && !socketRef.current) {
       // Initialize socket connection
       socketRef.current = io(SOCKET_URL, {
         auth: {
-          token: accessToken
+          token: accessToken,
         },
-        transports: ['websocket', 'polling'],
-        autoConnect: true
+        transports: ["websocket", "polling"],
+        autoConnect: true,
       });
 
       // Connection event handlers
-      socketRef.current.on('connect', () => {
-        console.log('Socket connected:', socketRef.current.id);
+      socketRef.current.on("connect", () => {
+        console.log("Socket connected:", socketRef.current.id);
         setIsConnected(true);
       });
 
-      socketRef.current.on('disconnect', (reason) => {
-        console.log('Socket disconnected:', reason);
+      socketRef.current.on("disconnect", (reason) => {
+        console.log("Socket disconnected:", reason);
         setIsConnected(false);
         setIsTyping(false);
       });
 
-      socketRef.current.on('connect_error', (error) => {
-        console.error('Socket connection error:', error);
+      socketRef.current.on("connect_error", (error) => {
+        console.error("Socket connection error:", error);
         setIsConnected(false);
       });
 
       // Typing indicators
-      socketRef.current.on('assistant_typing', ({ isTyping: typing }) => {
+      socketRef.current.on("assistant_typing", ({ isTyping: typing }) => {
         setIsTyping(typing);
       });
     }
@@ -58,11 +58,11 @@ export const useSocket = () => {
   // Send chat message via socket
   const sendMessage = (messages, context, conversationId, sessionId) => {
     if (socketRef.current && isConnected) {
-      socketRef.current.emit('chat_message', {
+      socketRef.current.emit("chat_message", {
         messages,
         context,
         conversationId,
-        sessionId
+        sessionId,
       });
     }
   };
@@ -70,18 +70,18 @@ export const useSocket = () => {
   // Join conversation room
   const joinConversation = (conversationId) => {
     if (socketRef.current && isConnected) {
-      socketRef.current.emit('join_conversation', { conversationId });
+      socketRef.current.emit("join_conversation", { conversationId });
     }
   };
 
   // Submit feedback
   const submitFeedback = (conversationId, messageIndex, rating, feedback) => {
     if (socketRef.current && isConnected) {
-      socketRef.current.emit('submit_feedback', {
+      socketRef.current.emit("submit_feedback", {
         conversationId,
         messageIndex,
         rating,
-        feedback
+        feedback,
       });
     }
   };
@@ -89,10 +89,10 @@ export const useSocket = () => {
   // Analyze soil image
   const analyzeSoil = (imageData, crop, conversationId) => {
     if (socketRef.current && isConnected) {
-      socketRef.current.emit('analyze_soil', {
+      socketRef.current.emit("analyze_soil", {
         imageData,
         crop,
-        conversationId
+        conversationId,
       });
     }
   };
@@ -100,7 +100,7 @@ export const useSocket = () => {
   // Request weather update
   const requestWeather = (coordinates) => {
     if (socketRef.current && isConnected) {
-      socketRef.current.emit('request_weather', { coordinates });
+      socketRef.current.emit("request_weather", { coordinates });
     }
   };
 
@@ -128,6 +128,6 @@ export const useSocket = () => {
     analyzeSoil,
     requestWeather,
     on,
-    off
+    off,
   };
 };

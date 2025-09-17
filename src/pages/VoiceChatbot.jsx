@@ -45,7 +45,7 @@ const VoiceChatbot = () => {
 
       // Mock API call - replace with actual endpoint
       const response = await fetch(
-        "http://localhost:5000/api/voice-chat/start-session",
+        "https://agri-ai-sigma.vercel.app/api/voice-chat/start-session",
         {
           method: "POST",
           headers: {
@@ -78,14 +78,17 @@ const VoiceChatbot = () => {
     try {
       if (currentSession) {
         // Mock API call
-        await fetch("http://localhost:5000/api/voice-chat/end-session", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${accessToken}`,
-          },
-          body: JSON.stringify({ sessionId: currentSession.sessionId }),
-        });
+        await fetch(
+          "https://agri-ai-sigma.vercel.app/api/voice-chat/end-session",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${accessToken}`,
+            },
+            body: JSON.stringify({ sessionId: currentSession.sessionId }),
+          }
+        );
       }
     } catch (error) {
       console.error("Error ending session:", error);
@@ -156,7 +159,7 @@ const VoiceChatbot = () => {
 
       // Mock API call - replace with actual endpoint
       const response = await fetch(
-        "http://localhost:5000/api/voice-chat/process-audio",
+        "https://agri-ai-sigma.vercel.app/api/voice-chat/process-audio",
         {
           method: "POST",
           headers: {
