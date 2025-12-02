@@ -107,13 +107,20 @@ class RAGSystem:
         response = self.text_model.generate_content(prompt)
         return response.text
 
-    def analyze_image(self, image_bytes: bytes) -> str:
+    def analyze_image(self, image_bytes: bytes, language: str = "en") -> str:
         """
         Analyzes a plant image using the Gemini Vision model and a professional prompt.
+        Supports both English and Hindi output based on the language parameter.
         """
         try:
-            logging.info("Analyzing image with Gemini Vision...")
-            prompt = settings.VISION_PROMPT
+            logging.info(f"Analyzing image with Gemini Vision in {language}...")
+            
+            # Select prompt based on language
+            if language.lower() == "hi":
+                prompt = settings.VISION_PROMPT_HINDI
+            else:
+                prompt = settings.VISION_PROMPT
+            
             img = Image.open(BytesIO(image_bytes))
             
             response = self.vision_model.generate_content([prompt, img])
