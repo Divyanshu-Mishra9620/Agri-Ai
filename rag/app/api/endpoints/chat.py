@@ -52,16 +52,17 @@ def predict_impact(request: schemas.PredictRequest):
         raise HTTPException(status_code=500, detail="An internal server error occurred.")
 
 @router.post("/analyze-plant-image", response_model=schemas.AnalysisResponse)
-def analyze_crop_image(file: UploadFile = File(...)):
+def analyze_crop_image(file: UploadFile = File(...), language: str = "en"):
     """
     Receives an image of a plant leaf and returns a diagnostic report.
+    Supports language parameter: 'en' for English, 'hi' for Hindi.
     """
-    logging.info(f"Received image for analysis: {file.filename}")
+    logging.info(f"Received image for analysis: {file.filename} in language: {language}")
     if not file.content_type or not file.content_type.startswith("image/"):
         raise HTTPException(status_code=400, detail="Invalid file type. Please upload an image.")
     try:
         image_data = file.file.read()
-        analysis_text = rag_system.analyze_image(image_data)
+        analysis_text = rag_system.analyze_image(image_data, language=language)
         return schemas.AnalysisResponse(analysis=analysis_text)
     except ConnectionError as e:
         raise HTTPException(status_code=503, detail=str(e))
