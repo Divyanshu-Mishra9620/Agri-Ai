@@ -1,0 +1,43 @@
+# Lightweight requirements for Render deployment (CPU-only)
+
+# Core API framework
+fastapi==0.115.5
+uvicorn[standard]==0.32.1
+pydantic==2.10.3
+pydantic-settings==2.6.1
+python-multipart==0.0.20
+python-dotenv==1.0.1
+
+# HTTP and web scraping
+requests==2.32.3
+beautifulsoup4==4.12.3
+googlesearch-python==1.2.5
+httpx==0.28.1
+
+# Google AI
+google-generativeai==0.8.3
+google-api-python-client==2.154.0
+
+# Vector database and embeddings (CPU-only)
+chromadb==0.5.23
+
+# Sentence transformers (CPU version)
+sentence-transformers==3.3.1
+
+# PyTorch CPU-only (much smaller)
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch==2.5.1+cpu
+torchvision==0.20.1+cpu
+torchaudio==2.5.1+cpu
+
+# Transformers and NLP
+transformers==4.47.0
+accelerate==1.2.1
+
+# Document processing
+pypdf==5.1.0
+langchain-text-splitters==0.3.4
+Pillow==11.0.0
+
+# Utilities
+numpy==2.1.3
