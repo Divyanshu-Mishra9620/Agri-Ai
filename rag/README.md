@@ -1,4 +1,4 @@
-"# Agri-AI RAG Service
+# Agri-AI RAG Service
 
 This is the RAG (Retrieval-Augmented Generation) service for the Agri-AI platform. It provides AI-powered agricultural assistance using Large Language Models, web search, and vision analysis.
 
@@ -182,4 +182,4 @@ This project is part of the Agri-AI platform.
 
 For issues and questions:
 - Open an issue on [GitHub](https://github.com/Divyanshu-Mishra9620/Agri-Ai/issues)
-- Check the [parent project README](../README.md)"
+- Check the [parent project README](../README.md)
