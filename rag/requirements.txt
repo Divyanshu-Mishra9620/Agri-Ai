@@ -5,7 +5,7 @@ pydantic-settings
 requests
 chromadb
 sentence-transformers
-pypdf
+PyPDF2
 langchain-text-splitters
 Pillow
 python-multipart

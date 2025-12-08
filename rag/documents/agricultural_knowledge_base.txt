@@ -1,0 +1,272 @@
+# Agricultural Knowledge Base - Sample Document
+
+## Crop Diseases and Management
+
+### Tomato Diseases
+
+#### Late Blight (Phytophthora infestans)
+Late blight is one of the most destructive diseases of tomato and potato crops worldwide.
+
+**Symptoms:**
+- Dark brown to black lesions on leaves, stems, and fruits
+- White fuzzy growth on the underside of leaves in humid conditions
+- Rapid spread during cool, wet weather
+- Entire plants can be destroyed within days
+
+**Management:**
+- Use resistant varieties when available
+- Apply fungicides preventively (copper-based or systemic)
+- Ensure proper spacing for air circulation
+- Remove and destroy infected plant material
+- Avoid overhead irrigation
+- Practice crop rotation with non-solanaceous crops
+
+#### Early Blight (Alternaria solani)
+Early blight affects older leaves first and can reduce yield significantly.
+
+**Symptoms:**
+- Concentric ring patterns on older leaves (target spots)
+- Dark brown lesions with yellow halos
+- Premature leaf drop
+- Stem cankers near soil line
+
+**Management:**
+- Apply fungicides at first sign of disease
+- Remove infected lower leaves
+- Mulch to prevent soil splash
+- Maintain proper plant nutrition
+- Use disease-free seeds and transplants
+
+### Rice Diseases
+
+#### Blast Disease (Magnaporthe oryzae)
+Rice blast is a major fungal disease affecting rice worldwide.
+
+**Symptoms:**
+- Diamond-shaped lesions on leaves with gray centers and brown margins
+- Neck rot causes entire panicles to die
+- Severe yield losses in susceptible varieties
+
+**Management:**
+- Use resistant varieties
+- Balanced fertilization (avoid excess nitrogen)
+- Proper water management
+- Seed treatment with fungicides
+- Remove infected stubble after harvest
+
+#### Bacterial Leaf Blight (Xanthomonas oryzae)
+A bacterial disease causing significant yield loss.
+
+**Symptoms:**
+- Water-soaked lesions along leaf margins
+- Lesions turn yellow then brown
+- Systemic infection in severe cases
+
+**Management:**
+- Plant resistant varieties
+- Use certified disease-free seeds
+- Balanced fertilization
+- Proper water management
+- Remove infected plants
+
+## Fertilizer Recommendations
+
+### NPK Requirements by Crop
+
+#### Wheat
+- Nitrogen (N): 120-150 kg/ha
+- Phosphorus (P2O5): 60-80 kg/ha
+- Potassium (K2O): 40-60 kg/ha
+
+**Application Schedule:**
+- Basal: 50% N + 100% P + 100% K at sowing
+- First top dressing: 25% N at 21 days after sowing
+- Second top dressing: 25% N at 40 days after sowing
+
+#### Rice
+- Nitrogen (N): 100-120 kg/ha
+- Phosphorus (P2O5): 50-60 kg/ha
+- Potassium (K2O): 40-50 kg/ha
+
+**Application Schedule:**
+- Basal: 50% N + 100% P + 50% K at transplanting
+- First top dressing: 25% N at tillering stage
+- Second top dressing: 25% N at panicle initiation
+- Third top dressing: 50% K at flowering
+
+#### Cotton
+- Nitrogen (N): 150-180 kg/ha
+- Phosphorus (P2O5): 60-75 kg/ha
+- Potassium (K2O): 50-60 kg/ha
+
+**Application Schedule:**
+- Basal: 25% N + 100% P + 50% K at sowing
+- First top dressing: 25% N at 30 days after sowing
+- Second top dressing: 25% N at 60 days after sowing
+- Third top dressing: 25% N + 50% K at flowering
+
+## Pest Management
+
+### Major Pests
+
+#### Aphids
+Small sap-sucking insects that transmit viral diseases.
+
+**Control:**
+- Natural enemies: Ladybird beetles, lacewings
+- Neem oil spray (3-5 ml/liter)
+- Yellow sticky traps
+- Imidacloprid @ 0.3 ml/liter for severe infestations
+
+#### Whiteflies
+Transmit viral diseases and cause sooty mold.
+
+**Control:**
+- Yellow sticky traps
+- Neem seed kernel extract @ 5%
+- Thiamethoxam @ 0.2 g/liter
+- Remove infected plants
+- Reflective mulches
+
+#### Bollworms (Cotton, Tomato)
+Major pest causing direct fruit/boll damage.
+
+**Control:**
+- Pheromone traps @ 5/acre
+- Bt sprays for young larvae
+- NPV @ 250 LE/ha
+- Spinosad @ 0.5 ml/liter
+- Remove and destroy damaged bolls/fruits
+
+## Irrigation Management
+
+### Drip Irrigation
+Most efficient method for water conservation.
+
+**Benefits:**
+- 40-60% water saving compared to flood irrigation
+- Reduced weed growth
+- Better fertilizer use efficiency
+- Reduced disease incidence
+
+**Recommended Crops:**
+- Vegetables (tomato, capsicum, cucumber)
+- Fruits (banana, pomegranate, citrus)
+- Cotton, sugarcane
+
+**Maintenance:**
+- Clean filters regularly
+- Flush laterals periodically
+- Check for emitter clogging
+- Maintain proper pressure
+
+### Sprinkler Irrigation
+Suitable for field crops and vegetables.
+
+**Advantages:**
+- 30-40% water saving
+- Uniform water distribution
+- Suitable for uneven terrain
+- Can be used for frost protection
+
+**Recommended Crops:**
+- Wheat, maize, soybean
+- Vegetables (cabbage, cauliflower)
+- Fodder crops
+
+## Soil Health Management
+
+### Organic Matter
+Maintaining 2-3% organic matter is crucial for soil health.
+
+**Methods to Increase:**
+- Green manuring with dhaincha, sunhemp
+- Farmyard manure @ 10-15 t/ha
+- Crop residue incorporation
+- Compost application
+- Vermicompost @ 5 t/ha
+
+### Soil Testing
+Regular soil testing (every 2-3 years) helps optimize fertilizer use.
+
+**Parameters to Test:**
+- pH
+- Organic carbon
+- Available N, P, K
+- Micronutrients (Zn, Fe, Mn, Cu)
+- Electrical conductivity
+
+## Weather-Based Advisory
+
+### Temperature Effects
+
+**High Temperature (>40°C):**
+- Reduce irrigation frequency but increase quantity
+- Apply mulch to conserve moisture
+- Provide shade nets for sensitive crops
+- Schedule irrigation during early morning or evening
+
+**Low Temperature (<10°C):**
+- Risk of frost damage
+- Use sprinkler irrigation for frost protection
+- Apply potash to improve cold tolerance
+- Delay sowing of sensitive crops
+
+### Rainfall Management
+
+**Heavy Rainfall Expected:**
+- Ensure proper drainage
+- Avoid fertilizer application
+- Support tall crops to prevent lodging
+- Delay irrigation
+- Prepare for pest disease outbreak
+
+**Drought Conditions:**
+- Adopt deficit irrigation
+- Use mulching
+- Schedule irrigation at critical stages
+- Select drought-tolerant varieties
+
+## Integrated Pest Management (IPM)
+
+### Components
+
+1. **Cultural Practices:**
+   - Crop rotation
+   - Clean cultivation
+   - Resistant varieties
+   - Proper spacing
+
+2. **Mechanical Control:**
+   - Hand picking of insects
+   - Traps (light, pheromone, sticky)
+   - Bird perches
+   - Removal of infected plants
+
+3. **Biological Control:**
+   - Trichogramma cards
+   - Chrysoperla releases
+   - Bt formulations
+   - NPV applications
+
+4. **Chemical Control:**
+   - Last resort only
+   - Use recommended doses
+   - Rotate different groups
+   - Observe pre-harvest intervals
+
+## Post-Harvest Management
+
+### Proper Storage
+- Clean and dry storage facilities
+- Maintain 12-14% moisture for grains
+- Use hermetic storage for pulses
+- Regular monitoring for pest infestation
+
+### Grading and Packaging
+- Remove damaged produce
+- Sort by size and quality
+- Use appropriate packaging materials
+- Label properly with date and grade
+
+This document provides essential agricultural knowledge for common crops, pests, diseases, and management practices. Always consult local agricultural extension services for region-specific recommendations.

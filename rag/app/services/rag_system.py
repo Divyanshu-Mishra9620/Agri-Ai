@@ -6,6 +6,7 @@ from PIL import Image
 
 from app.core.config import settings
 from app.services.web_search import search_the_web
+from app.services.vector_store import VectorStore
 import requests
 
 class RAGSystem:
@@ -13,6 +14,13 @@ class RAGSystem:
         genai.configure(api_key=settings.GEMINI_API_KEY)
         self.text_model = genai.GenerativeModel(settings.GEMINI_TEXT_MODEL)
         self.vision_model = genai.GenerativeModel(settings.GEMINI_VISION_MODEL)
+        
+        # Initialize vector store for document retrieval
+        self.vector_store = VectorStore(
+            persist_directory="./chroma_db",
+            collection_name="agri_docs"
+        )
+        logging.info("RAG System initialized with vector store")
 
     def get_weather_alert(self, city: str = "Gorakhpur") -> str:
         """
@@ -61,10 +69,57 @@ class RAGSystem:
 
     def get_answer(self, query: str) -> str:
         """
-        Generates an answer by first querying the Gemini model directly,
-        and then falling back to a web search if the initial answer is insufficient.
+        Generates an answer by:
+        1. First searching the local document vector store
+        2. If insufficient, queries Gemini directly
+        3. Falls back to web search if needed
         """
         try:
+            # Step 1: Search local documents first
+            logging.info(f"Searching local documents for query: '{query}'")
+            doc_results = self.vector_store.search(query, n_results=3)
+            
+            if doc_results and doc_results['documents'][0]:
+                # We have relevant documents
+                documents = doc_results['documents'][0]
+                metadatas = doc_results['metadatas'][0]
+                
+                # Build context from retrieved documents
+                doc_context = "\n\n".join([
+                    f"Document: {meta.get('filename', 'Unknown')}\n{doc}"
+                    for doc, meta in zip(documents, metadatas)
+                ])
+                
+                logging.info(f"Found {len(documents)} relevant documents in vector store")
+                
+                # Generate answer using document context
+                doc_prompt = f"""Based on the following agricultural documents, answer the question accurately and comprehensively.
+
+Documents:
+{doc_context}
+
+Question: {query}
+
+Please provide a detailed answer based on the documents above. If the documents don't contain enough information, say so clearly."""
+                
+                doc_response = self.text_model.generate_content(doc_prompt)
+                doc_answer = doc_response.text
+                
+                # Check if the document-based answer is sufficient
+                refusal_keywords = [
+                    "I cannot", "I am unable", "I don't have enough information",
+                    "documents don't contain", "not enough information"
+                ]
+                
+                if not any(keyword.lower() in doc_answer.lower() for keyword in refusal_keywords):
+                    logging.info("Document-based answer is sufficient. Returning to user.")
+                    return doc_answer
+                else:
+                    logging.info("Document-based answer was insufficient. Proceeding to direct query.")
+            else:
+                logging.info("No relevant documents found in vector store.")
+            
+            # Step 2: Try direct Gemini query
             logging.info(f"Attempting to get a direct answer for query: '{query}'")
             direct_prompt = settings.DISTRICT_REPORT_PROMPT.format(district_name=query)
             direct_response = self.text_model.generate_content(direct_prompt)
@@ -75,6 +130,7 @@ class RAGSystem:
                 logging.info("Direct answer is sufficient. Returning to user.")
                 return initial_answer
 
+            # Step 3: Fall back to web search
             logging.info(f"Direct answer was insufficient. Initiating web search for: '{query}'")
             web_context = search_the_web(query)
             

@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 load_dotenv()
 
-from app.api.endpoints import chat
+from app.api.endpoints import chat, documents
 from app.core.config import settings
 
 
@@ -27,6 +27,7 @@ app.add_middleware(
 )
 
 app.include_router(chat.router, prefix="/api")
+app.include_router(documents.router, prefix="/api")
 
 @app.get("/", tags=["Root"])
 def read_root():
