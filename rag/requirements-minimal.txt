@@ -1,0 +1,27 @@
+# Ultra-minimal requirements for Render (fast deployment)
+# Build time: ~2-3 minutes instead of 30 minutes
+
+# Core API framework
+fastapi==0.115.5
+uvicorn[standard]==0.32.1
+pydantic==2.10.3
+pydantic-settings==2.6.1
+python-multipart==0.0.20
+python-dotenv==1.0.1
+
+# HTTP requests
+requests==2.32.3
+httpx==0.28.1
+
+# Google AI (this is all you need for Gemini!)
+google-generativeai==0.8.3
+
+# Basic utilities
+numpy==2.1.3
+
+# Document processing (if needed)
+pypdf==5.1.0
+Pillow==11.0.0
+
+# Optional: If you need web scraping
+beautifulsoup4==4.12.3
