@@ -7,7 +7,7 @@ class Settings(BaseSettings):
     GEMINI_API_KEY: str
     GOOGLE_API_KEY: str
     GOOGLE_CX_ID: str
-    WEATHERAPI_KEY: str
+    OPENWEATHER_API_KEY: str
 
     GEMINI_TEXT_MODEL: str = "gemini-1.5-flash"
     GEMINI_VISION_MODEL: str = "gemini-1.5-flash"

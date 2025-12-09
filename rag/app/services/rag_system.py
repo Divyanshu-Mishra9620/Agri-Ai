@@ -24,15 +24,16 @@ class RAGSystem:
 
     def get_weather_alert(self, city: str = "Gorakhpur") -> str:
         """
-        Fetch 7-day forecast from WeatherAPI, return analysis text.
+        Fetch 5-day forecast from OpenWeather API, return analysis text.
         On transient fetch/analysis errors, return a friendly message string
         instead of raising ConnectionError (so endpoint can return 200).
         """
         try:
-            logging.info(f"Fetching weather forecast for {city} from WeatherAPI.com...")
+            logging.info(f"Fetching weather forecast for {city} from OpenWeather API...")
             api_url = (
-                f"http://api.weatherapi.com/v1/forecast.json"
-                f"?key={settings.WEATHERAPI_KEY}&q={city}&days=7&aqi=no&alerts=no"
+                f"https://api.openweathermap.org/data/2.5/forecast"
+                f"?q={city}&appid={settings.OPENWEATHER_API_KEY}"
+                f"&units=metric&cnt=40"  # cnt=40 gives ~5 days (40 * 3 hours)
         )
             resp = requests.get(api_url, timeout=10)
             resp.raise_for_status()
@@ -42,7 +43,7 @@ class RAGSystem:
             return "Sorry, I couldn't fetch the weather forecast at the moment."
 
         try:
-            forecast_summary = self._summarize_forecast(weather_data)
+            forecast_summary = self._summarize_openweather_forecast(weather_data)
             prompt = settings.WEATHER_ALERT_PROMPT.format(weather_data=forecast_summary)
             analysis_response = self.text_model.generate_content(prompt)
             return analysis_response.text
@@ -50,21 +51,62 @@ class RAGSystem:
             logging.exception("Error analyzing weather data with Gemini")
             return "Sorry, I couldn't analyze the weather data at the moment."
 
-    def _summarize_forecast(self, data: dict) -> str:
-        """Helper function to create a simple text summary from WeatherAPI.com data."""
-        location = data['location']['name']
-        summary = f"7-Day Weather Forecast for {location}:\n"
+    def _summarize_openweather_forecast(self, data: dict) -> str:
+        """Helper function to create a simple text summary from OpenWeather API data."""
+        from datetime import datetime
         
-        for day_data in data['forecast']['forecastday']:
-            date = day_data['date']
-            day_info = day_data['day']
+        city_name = data['city']['name']
+        country = data['city']['country']
+        summary = f"Weather Forecast for {city_name}, {country}:\n\n"
+        
+        # Group forecasts by date (OpenWeather provides 3-hour intervals)
+        daily_forecasts = {}
+        
+        for forecast in data['list']:
+            # Convert timestamp to date
+            date_str = datetime.fromtimestamp(forecast['dt']).strftime('%Y-%m-%d')
+            
+            if date_str not in daily_forecasts:
+                daily_forecasts[date_str] = {
+                    'temps': [],
+                    'conditions': [],
+                    'wind_speeds': [],
+                    'precipitation': 0,
+                    'humidity': []
+                }
+            
+            # Collect data for this day
+            daily_forecasts[date_str]['temps'].append(forecast['main']['temp'])
+            daily_forecasts[date_str]['conditions'].append(forecast['weather'][0]['description'])
+            daily_forecasts[date_str]['wind_speeds'].append(forecast['wind']['speed'])
+            daily_forecasts[date_str]['humidity'].append(forecast['main']['humidity'])
+            
+            # Add precipitation if exists (rain or snow)
+            if 'rain' in forecast and '3h' in forecast['rain']:
+                daily_forecasts[date_str]['precipitation'] += forecast['rain']['3h']
+            if 'snow' in forecast and '3h' in forecast['snow']:
+                daily_forecasts[date_str]['precipitation'] += forecast['snow']['3h']
+        
+        # Create daily summary (limit to 7 days for consistency)
+        for date, day_data in sorted(daily_forecasts.items())[:7]:
+            avg_temp = sum(day_data['temps']) / len(day_data['temps'])
+            max_temp = max(day_data['temps'])
+            min_temp = min(day_data['temps'])
+            max_wind = max(day_data['wind_speeds'])
+            avg_humidity = sum(day_data['humidity']) / len(day_data['humidity'])
+            # Most common condition
+            most_common_condition = max(set(day_data['conditions']), 
+                                       key=day_data['conditions'].count)
+            
             summary += (
                 f" - {date}: "
-                f"Avg Temp: {day_info['avgtemp_c']}°C, "
-                f"Max Wind: {day_info['maxwind_kph']} kph, "
-                f"Total Precip: {day_info['totalprecip_mm']} mm, "
-                f"Condition: {day_info['condition']['text']}\n"
+                f"Temp: {min_temp:.1f}°C to {max_temp:.1f}°C (Avg: {avg_temp:.1f}°C), "
+                f"Max Wind: {max_wind:.1f} m/s, "
+                f"Total Precip: {day_data['precipitation']:.1f} mm, "
+                f"Humidity: {avg_humidity:.0f}%, "
+                f"Condition: {most_common_condition}\n"
             )
+        
         return summary.strip()
 
     def get_answer(self, query: str) -> str:
