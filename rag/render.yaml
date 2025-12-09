@@ -5,8 +5,8 @@ services:
     region: oregon
     plan: free
     buildCommand: pip install -r requirements-render.txt
-    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT --workers 1
-    healthCheckPath: /
+    startCommand: python -m uvicorn main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.0
@@ -16,5 +16,5 @@ services:
         sync: false
       - key: GOOGLE_CX_ID
         sync: false
-      - key: WEATHERAPI_KEY
+      - key: OPENWEATHER_API_KEY
         sync: false
