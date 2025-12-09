@@ -1,13 +1,15 @@
 from pydantic_settings import BaseSettings
 import os
+from typing import Optional
 
 class Settings(BaseSettings):
     PROJECT_NAME: str = "SIH Agricultural AI Companion"
 
-    GEMINI_API_KEY: str
-    GOOGLE_API_KEY: str
-    GOOGLE_CX_ID: str
-    OPENWEATHER_API_KEY: str
+    # Make API keys optional with defaults to prevent startup failures
+    GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
+    GOOGLE_API_KEY: str = os.getenv("GOOGLE_API_KEY", "")
+    GOOGLE_CX_ID: str = os.getenv("GOOGLE_CX_ID", "")
+    OPENWEATHER_API_KEY: str = os.getenv("OPENWEATHER_API_KEY", "")
 
     GEMINI_TEXT_MODEL: str = "gemini-1.5-flash"
     GEMINI_VISION_MODEL: str = "gemini-1.5-flash"
