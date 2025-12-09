@@ -1,11 +1,27 @@
 import logging
 from fastapi import APIRouter, HTTPException, UploadFile, File
 from app.api import schemas
-from app.services.rag_system import RAGSystem
 
 router = APIRouter()
 
-rag_system = RAGSystem()
+# Lazy initialization of RAG system to avoid import-time failures
+_rag_system = None
+
+def get_rag_system():
+    """Lazy initialization of RAG system"""
+    global _rag_system
+    if _rag_system is None:
+        try:
+            from app.services.rag_system import RAGSystem
+            _rag_system = RAGSystem()
+            logging.info("RAG System initialized successfully")
+        except Exception as e:
+            logging.error(f"Failed to initialize RAG System: {e}")
+            raise HTTPException(
+                status_code=503,
+                detail=f"RAG service initialization failed: {str(e)}"
+            )
+    return _rag_system
 
 @router.post("/weather-alert", response_model=schemas.AnalysisResponse)
 def get_weather_alert_for_location(request: schemas.QueryRequest):
@@ -14,6 +30,7 @@ def get_weather_alert_for_location(request: schemas.QueryRequest):
     """
     logging.info(f"Received weather alert request for: {request.query}")
     try:
+        rag_system = get_rag_system()
         alert_text = rag_system.get_weather_alert(city=request.query)
         return schemas.AnalysisResponse(analysis=alert_text)
     except Exception as e:
@@ -27,6 +44,7 @@ def get_answer(request: schemas.QueryRequest):
     """
     logging.info(f"Received query: {request.query}")
     try:
+        rag_system = get_rag_system()
         answer_text = rag_system.get_answer(request.query)
         return schemas.AnswerResponse(answer=answer_text)
     except ConnectionError as e:
@@ -43,6 +61,7 @@ def predict_impact(request: schemas.PredictRequest):
     """
     logging.info(f"Received prediction request for crop: {request.crop}")
     try:
+        rag_system = get_rag_system()
         prediction_text = rag_system.generate_predictive_answer(request.crop, request.parameter, request.change)
         return schemas.PredictionResponse(prediction=prediction_text)
     except ConnectionError as e:
@@ -61,6 +80,7 @@ def analyze_crop_image(file: UploadFile = File(...), language: str = "en"):
     if not file.content_type or not file.content_type.startswith("image/"):
         raise HTTPException(status_code=400, detail="Invalid file type. Please upload an image.")
     try:
+        rag_system = get_rag_system()
         image_data = file.file.read()
         analysis_text = rag_system.analyze_image(image_data, language=language)
         return schemas.AnalysisResponse(analysis=analysis_text)

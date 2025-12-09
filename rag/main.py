@@ -27,10 +27,17 @@ except Exception as e:
     raise
 
 try:
-    from app.api.endpoints import chat, documents
+    logger.info("Importing chat endpoint...")
+    from app.api.endpoints import chat
+    logger.info("Chat endpoint imported successfully")
+    
+    logger.info("Importing documents endpoint...")
+    from app.api.endpoints import documents
+    logger.info("Documents endpoint imported successfully")
+    
     logger.info("API endpoints imported successfully")
 except Exception as e:
-    logger.error(f"Failed to import API endpoints: {e}")
+    logger.error(f"Failed to import API endpoints: {e}", exc_info=True)
     raise
 
 logger.info("Creating FastAPI application...")
