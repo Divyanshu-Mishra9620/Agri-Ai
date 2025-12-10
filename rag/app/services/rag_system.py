@@ -1,8 +1,10 @@
 import logging
 from fastapi import HTTPException
 from io import BytesIO
-import google.generativeai as genai
+import base64
 from PIL import Image
+import json
+import time
 
 from app.core.config import settings
 from app.services.web_search import search_the_web
@@ -18,9 +20,16 @@ except ImportError:
 
 class RAGSystem:
     def __init__(self):
-        genai.configure(api_key=settings.GEMINI_API_KEY)
-        self.text_model = genai.GenerativeModel(settings.GEMINI_TEXT_MODEL)
-        self.vision_model = genai.GenerativeModel(settings.GEMINI_VISION_MODEL)
+        """Initialize RAG System with OpenRouter API"""
+        self.api_key = settings.OPENROUTER_API_KEY or settings.GEMINI_API_KEY
+        self.text_model = settings.OPENROUTER_MODEL
+        self.vision_model = settings.OPENROUTER_VISION_MODEL
+        self.base_url = "https://openrouter.ai/api/v1/chat/completions"
+        
+        if not self.api_key:
+            raise ValueError("No API key found! Set OPENROUTER_API_KEY or GEMINI_API_KEY in .env")
+        
+        logging.info(f"RAG System initialized with OpenRouter (Model: {self.text_model})")
         
         # Initialize vector store only if dependencies are available
         if VECTOR_STORE_AVAILABLE:
@@ -36,6 +45,98 @@ class RAGSystem:
         else:
             self.vector_store = None
             logging.info("RAG System initialized without vector store (lightweight mode)")
+    
+    def _call_openrouter(self, messages: list, model: str = None, max_tokens: int = 4000, max_retries: int = 3) -> str:
+        """
+        Generic method to call OpenRouter API with retry logic for rate limits
+        
+        Args:
+            messages: List of message dicts with 'role' and 'content'
+            model: Model to use (defaults to self.text_model)
+            max_tokens: Maximum tokens in response
+            max_retries: Maximum number of retry attempts for rate limits
+            
+        Returns:
+            str: Response text from the model
+        """
+        if model is None:
+            model = self.text_model
+            
+        headers = {
+            "Authorization": f"Bearer {self.api_key}",
+            "Content-Type": "application/json",
+            "HTTP-Referer": "https://krishinova.app",  # Optional: your site URL
+            "X-Title": "Krishi Mitra"  # Optional: your app name
+        }
+        
+        payload = {
+            "model": model,
+            "messages": messages,
+            "max_tokens": max_tokens,
+            "temperature": 0.7
+        }
+        
+        for attempt in range(max_retries):
+            try:
+                logging.info(f"Calling OpenRouter API with model: {model} (attempt {attempt + 1}/{max_retries})")
+                response = requests.post(
+                    self.base_url,
+                    headers=headers,
+                    json=payload,
+                    timeout=30
+                )
+                
+                # Handle rate limiting with exponential backoff
+                if response.status_code == 429:
+                    if attempt < max_retries - 1:
+                        wait_time = (2 ** attempt) * 2  # 2, 4, 8 seconds
+                        logging.warning(f"Rate limit hit. Waiting {wait_time} seconds before retry...")
+                        time.sleep(wait_time)
+                        continue
+                    else:
+                        error_msg = "OpenRouter rate limit exceeded. The free tier has limited requests. Please try again in a few moments or consider upgrading your OpenRouter plan."
+                        logging.error(error_msg)
+                        raise ConnectionError(error_msg)
+                
+                response.raise_for_status()
+                
+                data = response.json()
+                if 'choices' in data and len(data['choices']) > 0:
+                    return data['choices'][0]['message']['content']
+                else:
+                    raise ValueError(f"Unexpected response format: {data}")
+                    
+            except requests.exceptions.Timeout:
+                logging.error("OpenRouter API request timed out")
+                if attempt < max_retries - 1:
+                    wait_time = 3
+                    logging.info(f"Retrying after {wait_time} seconds...")
+                    time.sleep(wait_time)
+                    continue
+                raise ConnectionError("AI service is taking too long to respond. Please try again.")
+            except requests.exceptions.RequestException as e:
+                if hasattr(e, 'response') and e.response is not None:
+                    try:
+                        error_data = e.response.json()
+                        error_msg = error_data.get('error', {}).get('message', str(e))
+                        logging.error(f"API Error Details: {error_msg}")
+                        
+                        # Don't retry on client errors (except 429)
+                        if e.response.status_code != 429:
+                            raise ConnectionError(f"AI service error: {error_msg}")
+                    except:
+                        pass
+                
+                if attempt < max_retries - 1:
+                    wait_time = 2
+                    logging.info(f"Request failed, retrying after {wait_time} seconds...")
+                    time.sleep(wait_time)
+                    continue
+                    
+                logging.error(f"OpenRouter API error after {max_retries} attempts: {e}")
+                raise ConnectionError(f"An unexpected error occurred while processing your request: {e}")
+        
+        raise ConnectionError("Failed to get response from AI service after multiple attempts")
 
     def get_weather_alert(self, city: str = "Gorakhpur") -> str:
         """
@@ -60,10 +161,13 @@ class RAGSystem:
         try:
             forecast_summary = self._summarize_openweather_forecast(weather_data)
             prompt = settings.WEATHER_ALERT_PROMPT.format(weather_data=forecast_summary)
-            analysis_response = self.text_model.generate_content(prompt)
-            return analysis_response.text
+            
+            # Use OpenRouter API
+            messages = [{"role": "user", "content": prompt}]
+            analysis_text = self._call_openrouter(messages)
+            return analysis_text
         except Exception as e:
-            logging.exception("Error analyzing weather data with Gemini")
+            logging.exception("Error analyzing weather data")
             return "Sorry, I couldn't analyze the weather data at the moment."
 
     def _summarize_openweather_forecast(self, data: dict) -> str:
@@ -151,7 +255,7 @@ class RAGSystem:
                         
                         logging.info(f"Found {len(documents)} relevant documents in vector store")
                         
-                        # Generate answer using document context
+                        # Generate answer using document context with OpenRouter
                         doc_prompt = f"""Based on the following agricultural documents, answer the question accurately and comprehensively.
 
 Documents:
@@ -161,8 +265,8 @@ Question: {query}
 
 Please provide a detailed answer based on the documents above. If the documents don't contain enough information, say so clearly."""
                         
-                        doc_response = self.text_model.generate_content(doc_prompt)
-                        doc_answer = doc_response.text
+                        messages = [{"role": "user", "content": doc_prompt}]
+                        doc_answer = self._call_openrouter(messages)
                         
                         # Check if the document-based answer is sufficient
                         refusal_keywords = [
@@ -182,11 +286,11 @@ Please provide a detailed answer based on the documents above. If the documents 
             else:
                 logging.info("Vector store not available. Using direct query mode.")
             
-            # Step 2: Try direct Gemini query
+            # Step 2: Try direct query with OpenRouter
             logging.info(f"Attempting to get a direct answer for query: '{query}'")
             direct_prompt = settings.DISTRICT_REPORT_PROMPT.format(district_name=query)
-            direct_response = self.text_model.generate_content(direct_prompt)
-            initial_answer = direct_response.text
+            messages = [{"role": "user", "content": direct_prompt}]
+            initial_answer = self._call_openrouter(messages)
 
             refusal_keywords = ["I cannot", "I am unable", "I don't have enough information"]
             if not any(keyword in initial_answer for keyword in refusal_keywords):
@@ -202,8 +306,9 @@ Please provide a detailed answer based on the documents above. If the documents 
                 return initial_answer
             
             web_prompt = settings.WEB_SEARCH_PROMPT_TEMPLATE.format(context=web_context, query=query)
-            final_response = self.text_model.generate_content(web_prompt)
-            return final_response.text
+            messages = [{"role": "user", "content": web_prompt}]
+            final_answer = self._call_openrouter(messages)
+            return final_answer
 
         except Exception as e:
             logging.error(f"An error occurred in the answer generation pipeline: {e}", exc_info=True)
@@ -223,16 +328,17 @@ Please provide a detailed answer based on the documents above. If the documents 
         prompt = settings.PREDICTIVE_PROMPT_TEMPLATE.format(
             crop=crop, parameter=parameter, change=change, context=web_context
         )
-        response = self.text_model.generate_content(prompt)
-        return response.text
+        messages = [{"role": "user", "content": prompt}]
+        answer = self._call_openrouter(messages)
+        return answer
 
     def analyze_image(self, image_bytes: bytes, language: str = "en") -> str:
         """
-        Analyzes a plant image using the Gemini Vision model and a professional prompt.
+        Analyzes a plant image using OpenRouter Vision model.
         Supports both English and Hindi output based on the language parameter.
         """
         try:
-            logging.info(f"Analyzing image with Gemini Vision in {language}...")
+            logging.info(f"Analyzing image with OpenRouter Vision in {language}...")
             
             # Select prompt based on language
             if language.lower() == "hi":
@@ -240,10 +346,33 @@ Please provide a detailed answer based on the documents above. If the documents 
             else:
                 prompt = settings.VISION_PROMPT
             
+            # Convert image to base64
             img = Image.open(BytesIO(image_bytes))
+            buffered = BytesIO()
+            img.save(buffered, format="PNG")
+            img_base64 = base64.b64encode(buffered.getvalue()).decode('utf-8')
             
-            response = self.vision_model.generate_content([prompt, img])
-            return response.text
+            # OpenRouter vision format
+            messages = [
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": prompt
+                        },
+                        {
+                            "type": "image_url",
+                            "image_url": {
+                                "url": f"data:image/png;base64,{img_base64}"
+                            }
+                        }
+                    ]
+                }
+            ]
+            
+            analysis = self._call_openrouter(messages, model=self.vision_model)
+            return analysis
         except Exception as e:
             logging.error(f"Error during image analysis: {e}", exc_info=True)
             raise HTTPException(status_code=500, detail="Failed to process or analyze the image.")

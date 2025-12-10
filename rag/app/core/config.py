@@ -5,6 +5,11 @@ from typing import Optional
 class Settings(BaseSettings):
     PROJECT_NAME: str = "SIH Agricultural AI Companion"
 
+    # OpenRouter API Configuration
+    OPENROUTER_API_KEY: str = os.getenv("OPENROUTER_API_KEY", "")
+    OPENROUTER_MODEL: str = os.getenv("OPENROUTER_MODEL", "google/gemini-2.0-flash-exp:free")
+    OPENROUTER_VISION_MODEL: str = os.getenv("OPENROUTER_VISION_MODEL", "google/gemini-2.0-flash-exp:free")
+    
     # Make API keys optional with defaults to prevent startup failures
     GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
     GOOGLE_API_KEY: str = os.getenv("GOOGLE_API_KEY", "")
