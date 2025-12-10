@@ -290,7 +290,13 @@ Please provide a detailed answer based on the documents above. If the documents 
             logging.info(f"Attempting to get a direct answer for query: '{query}'")
             direct_prompt = settings.DISTRICT_REPORT_PROMPT.format(district_name=query)
             messages = [{"role": "user", "content": direct_prompt}]
-            initial_answer = self._call_openrouter(messages)
+            initial_answer = self._call_openrouter(messages, max_tokens=1500)  # Reduced for faster response
+
+            # Skip web search for district queries - just return the initial answer
+            # Web search adds 30-60 seconds and often times out
+            if "district" in query.lower() or "farming in" in query.lower():
+                logging.info("District query detected. Returning direct answer without web search.")
+                return initial_answer
 
             refusal_keywords = ["I cannot", "I am unable", "I don't have enough information"]
             if not any(keyword in initial_answer for keyword in refusal_keywords):
