@@ -31,13 +31,22 @@ try:
     from app.api.endpoints import chat
     logger.info("Chat endpoint imported successfully")
     
-    logger.info("Importing documents endpoint...")
-    from app.api.endpoints import documents
-    logger.info("Documents endpoint imported successfully")
+    # Make documents endpoint optional - may not be available with minimal dependencies
+    documents = None
+    logger.info("Attempting to import documents endpoint (optional)...")
+    try:
+        from app.api.endpoints import documents
+        logger.info("Documents endpoint imported successfully")
+    except ImportError as e:
+        logger.warning(f"Documents endpoint not available (missing dependencies): {e}")
+        logger.info("Continuing without document ingestion features...")
+    except Exception as e:
+        logger.error(f"Unexpected error importing documents endpoint: {e}")
+        logger.info("Continuing without document ingestion features...")
     
-    logger.info("API endpoints imported successfully")
+    logger.info("API endpoints import completed")
 except Exception as e:
-    logger.error(f"Failed to import API endpoints: {e}", exc_info=True)
+    logger.error(f"Failed to import chat endpoint: {e}", exc_info=True)
     raise
 
 logger.info("Creating FastAPI application...")
@@ -60,8 +69,11 @@ logger.info("CORS middleware added")
 
 logger.info("Including routers...")
 app.include_router(chat.router, prefix="/api")
-app.include_router(documents.router, prefix="/api")
-logger.info("Routers included successfully")
+if documents is not None:
+    app.include_router(documents.router, prefix="/api")
+    logger.info("Chat and documents routers included successfully")
+else:
+    logger.info("Chat router included successfully (documents router skipped)")
 
 @app.on_event("startup")
 async def startup_event():
