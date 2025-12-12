@@ -44,8 +44,11 @@ def get_answer(request: schemas.QueryRequest):
     """
     logging.info(f"Received query: {request.query}")
     try:
+        logging.info("Initializing RAG system...")
         rag_system = get_rag_system()
+        logging.info("RAG system initialized, processing query...")
         answer_text = rag_system.get_answer(request.query)
+        logging.info(f"Query processed successfully, answer length: {len(answer_text)}")
         return schemas.AnswerResponse(answer=answer_text)
     except ConnectionError as e:
         logging.error(f"A connection error occurred: {e}")

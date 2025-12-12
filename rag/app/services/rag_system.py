@@ -297,9 +297,13 @@ Please provide a detailed answer based on the documents above. If the documents 
             
             # Step 2: Try direct query with OpenRouter
             logging.info(f"Attempting to get a direct answer for query: '{query}'")
+            logging.info(f"Formatting district report prompt...")
             direct_prompt = settings.DISTRICT_REPORT_PROMPT.format(district_name=query)
+            logging.info(f"Prompt formatted, creating messages...")
             messages = [{"role": "user", "content": direct_prompt}]
+            logging.info(f"Calling OpenRouter API for district query...")
             initial_answer = self._call_openrouter(messages, max_tokens=1500)  # Reduced for faster response
+            logging.info(f"Received answer from OpenRouter, length: {len(initial_answer)}")
 
             # Skip web search for district queries - just return the initial answer
             # Web search adds 30-60 seconds and often times out
