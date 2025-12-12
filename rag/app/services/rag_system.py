@@ -46,7 +46,7 @@ class RAGSystem:
             self.vector_store = None
             logging.info("RAG System initialized without vector store (lightweight mode)")
     
-    def _call_openrouter(self, messages: list, model: str = None, max_tokens: int = 4000, max_retries: int = 3) -> str:
+    def _call_openrouter(self, messages: list, model: str = None, max_tokens: int = 4000, max_retries: int = 3, timeout: int = None) -> str:
         """
         Generic method to call OpenRouter API with retry logic for rate limits
         
@@ -55,12 +55,21 @@ class RAGSystem:
             model: Model to use (defaults to self.text_model)
             max_tokens: Maximum tokens in response
             max_retries: Maximum number of retry attempts for rate limits
+            timeout: Request timeout in seconds (auto-determined if None)
             
         Returns:
             str: Response text from the model
         """
         if model is None:
             model = self.text_model
+            
+        # Auto-determine timeout based on model type
+        if timeout is None:
+            # Vision models need more time (especially with images)
+            if model == self.vision_model or 'vision' in model.lower() or 'gpt-4o' in model.lower():
+                timeout = 120  # 2 minutes for vision models
+            else:
+                timeout = 45  # 45 seconds for text models
             
         headers = {
             "Authorization": f"Bearer {self.api_key}",
@@ -78,12 +87,12 @@ class RAGSystem:
         
         for attempt in range(max_retries):
             try:
-                logging.info(f"Calling OpenRouter API with model: {model} (attempt {attempt + 1}/{max_retries})")
+                logging.info(f"Calling OpenRouter API with model: {model} (attempt {attempt + 1}/{max_retries}, timeout: {timeout}s)")
                 response = requests.post(
                     self.base_url,
                     headers=headers,
                     json=payload,
-                    timeout=30
+                    timeout=timeout
                 )
                 
                 # Handle rate limiting with exponential backoff
@@ -352,11 +361,19 @@ Please provide a detailed answer based on the documents above. If the documents 
             else:
                 prompt = settings.VISION_PROMPT
             
-            # Convert image to base64
+            # Convert image to base64 with size optimization
             img = Image.open(BytesIO(image_bytes))
+            
+            # Resize large images to prevent memory issues and reduce API costs
+            max_size = (1024, 1024)  # Max 1024x1024 pixels
+            if img.size[0] > max_size[0] or img.size[1] > max_size[1]:
+                logging.info(f"Resizing image from {img.size} to fit {max_size}")
+                img.thumbnail(max_size, Image.Resampling.LANCZOS)
+            
             buffered = BytesIO()
-            img.save(buffered, format="PNG")
+            img.save(buffered, format="PNG", optimize=True)
             img_base64 = base64.b64encode(buffered.getvalue()).decode('utf-8')
+            logging.info(f"Image encoded to base64, size: {len(img_base64)} characters")
             
             # OpenRouter vision format
             messages = [
@@ -377,8 +394,13 @@ Please provide a detailed answer based on the documents above. If the documents 
                 }
             ]
             
-            analysis = self._call_openrouter(messages, model=self.vision_model)
+            logging.info(f"Calling OpenRouter vision model: {self.vision_model}")
+            # Vision models need more tokens and time
+            analysis = self._call_openrouter(messages, model=self.vision_model, max_tokens=2000, max_retries=2)
             return analysis
+        except requests.exceptions.Timeout:
+            logging.error("Image analysis timed out - vision model took too long")
+            raise ConnectionError("The vision model is taking too long to respond. This can happen with large images or when the service is cold starting. Please try again with a smaller image or wait a moment.")
         except Exception as e:
             logging.error(f"Error during image analysis: {e}", exc_info=True)
-            raise HTTPException(status_code=500, detail="Failed to process or analyze the image.")
+            raise ConnectionError(f"Failed to process or analyze the image: {str(e)}")
