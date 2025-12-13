@@ -21,30 +21,43 @@ except ImportError:
 class RAGSystem:
     def __init__(self):
         """Initialize RAG System with OpenRouter API"""
+        logging.info("Starting RAG System initialization...")
+        
         self.api_key = settings.OPENROUTER_API_KEY or settings.GEMINI_API_KEY
         self.text_model = settings.OPENROUTER_MODEL
         self.vision_model = settings.OPENROUTER_VISION_MODEL
         self.base_url = "https://openrouter.ai/api/v1/chat/completions"
         
         if not self.api_key:
+            logging.error("No API key found!")
             raise ValueError("No API key found! Set OPENROUTER_API_KEY or GEMINI_API_KEY in .env")
         
-        logging.info(f"RAG System initialized with OpenRouter (Model: {self.text_model})")
+        logging.info(f"API key configured, using OpenRouter (Model: {self.text_model})")
         
         # Initialize vector store only if dependencies are available
+        # Skip vector store on Render to avoid initialization delays
         if VECTOR_STORE_AVAILABLE:
+            logging.info("Vector store dependencies available, attempting initialization...")
             try:
-                self.vector_store = VectorStore(
-                    persist_directory="./chroma_db",
-                    collection_name="agri_docs"
-                )
-                logging.info("RAG System initialized with vector store")
+                import os
+                # Skip vector store initialization on Render (no persistent storage)
+                if os.getenv('RENDER'):
+                    logging.info("Running on Render, skipping vector store initialization (no persistent storage)")
+                    self.vector_store = None
+                else:
+                    self.vector_store = VectorStore(
+                        persist_directory="./chroma_db",
+                        collection_name="agri_docs"
+                    )
+                    logging.info("RAG System initialized with vector store")
             except Exception as e:
                 logging.warning(f"Could not initialize vector store: {e}")
                 self.vector_store = None
         else:
             self.vector_store = None
-            logging.info("RAG System initialized without vector store (lightweight mode)")
+            logging.info("Vector store dependencies not available (lightweight mode)")
+        
+        logging.info("RAG System initialization complete!")
     
     def _call_openrouter(self, messages: list, model: str = None, max_tokens: int = 4000, max_retries: int = 3, timeout: int = None) -> str:
         """
