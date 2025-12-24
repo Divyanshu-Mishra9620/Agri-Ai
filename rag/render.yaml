@@ -5,11 +5,17 @@ services:
     region: oregon
     plan: free
     buildCommand: pip install -r requirements-minimal.txt
-    startCommand: python -m uvicorn main:app --host 0.0.0.0 --port $PORT --log-level info --access-log
+    startCommand: python -m uvicorn main:app --host 0.0.0.0 --port $PORT --log-level info --access-log --timeout-keep-alive 90
     healthCheckPath: /health
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.0
+      - key: OPENROUTER_API_KEY
+        sync: false
+      - key: OPENROUTER_MODEL
+        value: google/gemini-2.0-flash-exp:free
+      - key: OPENROUTER_VISION_MODEL
+        value: google/gemini-2.0-flash-exp:free
       - key: GEMINI_API_KEY
         sync: false
       - key: GOOGLE_API_KEY
@@ -18,3 +24,5 @@ services:
         sync: false
       - key: OPENWEATHER_API_KEY
         sync: false
+      - key: RENDER
+        value: true

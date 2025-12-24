@@ -28,10 +28,12 @@ class RAGSystem:
         self.base_url = "https://openrouter.ai/api/v1/chat/completions"
         
         if not self.api_key:
-            logging.error("No API key found!")
-            raise ValueError("No API key found! Set OPENROUTER_API_KEY or GEMINI_API_KEY in .env")
+            logging.error("No API key found! OPENROUTER_API_KEY and GEMINI_API_KEY are both missing!")
+            raise ValueError("No API key found! Set OPENROUTER_API_KEY or GEMINI_API_KEY in environment variables")
         
-        logging.info(f"API key configured, using OpenRouter (Model: {self.text_model})")
+        logging.info(f"✅ API key configured successfully")
+        logging.info(f"📦 Using OpenRouter (Model: {self.text_model})")
+        logging.info(f"🖼️  Vision Model: {self.vision_model}")
         
         if VECTOR_STORE_AVAILABLE:
             logging.info("Vector store dependencies available, attempting initialization...")
@@ -53,7 +55,7 @@ class RAGSystem:
             self.vector_store = None
             logging.info("Vector store dependencies not available (lightweight mode)")
         
-        logging.info("RAG System initialization complete!")
+        logging.info("✅ RAG System initialization complete!")
     
     def _call_openrouter_stream(self, messages: list, model: str = None, max_tokens: int = 4000, timeout: int = None):
         """
@@ -71,12 +73,12 @@ class RAGSystem:
         if model is None:
             model = self.text_model
             
-        # Auto-determine timeout based on model type
+        # Auto-determine timeout based on model type - INCREASED for Render free tier
         if timeout is None:
             if model == self.vision_model or 'vision' in model.lower() or 'gpt-4o' in model.lower():
-                timeout = 120
+                timeout = 180  # 3 minutes for vision models (Render can be slow)
             else:
-                timeout = 45
+                timeout = 90  # 90 seconds for text models
             
         headers = {
             "Authorization": f"Bearer {self.api_key}",
@@ -94,7 +96,7 @@ class RAGSystem:
         }
         
         try:
-            logging.info(f"Calling OpenRouter API (streaming) with model: {model}, timeout: {timeout}s")
+            logging.info(f"🚀 Calling OpenRouter API (streaming) with model: {model}, timeout: {timeout}s")
             response = requests.post(
                 self.base_url,
                 headers=headers,
@@ -105,6 +107,9 @@ class RAGSystem:
             
             response.raise_for_status()
             
+            logging.info("✅ Streaming response started, processing chunks...")
+            chunk_count = 0
+            
             # Process streamed response
             for line in response.iter_lines():
                 if line:
@@ -112,18 +117,23 @@ class RAGSystem:
                     if line_text.startswith('data: '):
                         data_str = line_text[6:]  # Remove 'data: ' prefix
                         if data_str == '[DONE]':
+                            logging.info(f"✅ Streaming complete! Processed {chunk_count} chunks")
                             break
                         try:
                             data = json.loads(data_str)
                             if 'choices' in data and len(data['choices']) > 0:
                                 delta = data['choices'][0].get('delta', {})
                                 if 'content' in delta:
+                                    chunk_count += 1
                                     yield delta['content']
                         except json.JSONDecodeError:
                             continue
                             
+        except requests.exceptions.Timeout:
+            logging.error(f"❌ Streaming API timeout after {timeout}s")
+            raise ConnectionError(f"AI service timed out after {timeout} seconds. Please try again.")
         except requests.exceptions.RequestException as e:
-            logging.error(f"Streaming API error: {e}")
+            logging.error(f"❌ Streaming API error: {e}")
             raise ConnectionError(f"AI service error: {str(e)}")
     
     def _call_openrouter(self, messages: list, model: str = None, max_tokens: int = 4000, max_retries: int = 3, timeout: int = None) -> str:
