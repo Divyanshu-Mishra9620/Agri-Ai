@@ -10,7 +10,6 @@ from app.core.config import settings
 from app.services.web_search import search_the_web
 import requests
 
-# Make vector store optional to avoid heavy dependencies
 try:
     from app.services.vector_store import VectorStore
     VECTOR_STORE_AVAILABLE = True
@@ -34,13 +33,10 @@ class RAGSystem:
         
         logging.info(f"API key configured, using OpenRouter (Model: {self.text_model})")
         
-        # Initialize vector store only if dependencies are available
-        # Skip vector store on Render to avoid initialization delays
         if VECTOR_STORE_AVAILABLE:
             logging.info("Vector store dependencies available, attempting initialization...")
             try:
                 import os
-                # Skip vector store initialization on Render (no persistent storage)
                 if os.getenv('RENDER'):
                     logging.info("Running on Render, skipping vector store initialization (no persistent storage)")
                     self.vector_store = None
@@ -58,6 +54,77 @@ class RAGSystem:
             logging.info("Vector store dependencies not available (lightweight mode)")
         
         logging.info("RAG System initialization complete!")
+    
+    def _call_openrouter_stream(self, messages: list, model: str = None, max_tokens: int = 4000, timeout: int = None):
+        """
+        Stream responses from OpenRouter API
+        
+        Args:
+            messages: List of message dicts with 'role' and 'content'
+            model: Model to use (defaults to self.text_model)
+            max_tokens: Maximum tokens in response
+            timeout: Request timeout in seconds (auto-determined if None)
+            
+        Yields:
+            str: Chunks of response text from the model
+        """
+        if model is None:
+            model = self.text_model
+            
+        # Auto-determine timeout based on model type
+        if timeout is None:
+            if model == self.vision_model or 'vision' in model.lower() or 'gpt-4o' in model.lower():
+                timeout = 120
+            else:
+                timeout = 45
+            
+        headers = {
+            "Authorization": f"Bearer {self.api_key}",
+            "Content-Type": "application/json",
+            "HTTP-Referer": "https://krishinova.app",
+            "X-Title": "Krishi Mitra"
+        }
+        
+        payload = {
+            "model": model,
+            "messages": messages,
+            "max_tokens": max_tokens,
+            "temperature": 0.7,
+            "stream": True  # Enable streaming
+        }
+        
+        try:
+            logging.info(f"Calling OpenRouter API (streaming) with model: {model}, timeout: {timeout}s")
+            response = requests.post(
+                self.base_url,
+                headers=headers,
+                json=payload,
+                timeout=timeout,
+                stream=True
+            )
+            
+            response.raise_for_status()
+            
+            # Process streamed response
+            for line in response.iter_lines():
+                if line:
+                    line_text = line.decode('utf-8')
+                    if line_text.startswith('data: '):
+                        data_str = line_text[6:]  # Remove 'data: ' prefix
+                        if data_str == '[DONE]':
+                            break
+                        try:
+                            data = json.loads(data_str)
+                            if 'choices' in data and len(data['choices']) > 0:
+                                delta = data['choices'][0].get('delta', {})
+                                if 'content' in delta:
+                                    yield delta['content']
+                        except json.JSONDecodeError:
+                            continue
+                            
+        except requests.exceptions.RequestException as e:
+            logging.error(f"Streaming API error: {e}")
+            raise ConnectionError(f"AI service error: {str(e)}")
     
     def _call_openrouter(self, messages: list, model: str = None, max_tokens: int = 4000, max_retries: int = 3, timeout: int = None) -> str:
         """
@@ -322,6 +389,22 @@ Please provide a detailed answer based on the documents above. If the documents 
             # Web search adds 30-60 seconds and often times out
             if "district" in query.lower() or "farming in" in query.lower():
                 logging.info("District query detected. Returning direct answer without web search.")
+                
+                # Validate response has table format
+                if "|" not in initial_answer or "Crop" not in initial_answer:
+                    logging.warning("Response missing table format, enhancing...")
+                    enhance_prompt = f"""The following response about {query} is missing proper crop price data in table format. 
+Please rewrite it to include a comprehensive markdown table with at least 8-10 major crops, their prices per quintal, and growing seasons.
+
+Original response:
+{initial_answer}
+
+Provide the enhanced response with a proper table now:"""
+                    
+                    messages = [{"role": "user", "content": enhance_prompt}]
+                    initial_answer = self._call_openrouter(messages, max_tokens=2000)
+                    logging.info("Response enhanced with table format")
+                
                 return initial_answer
 
             refusal_keywords = ["I cannot", "I am unable", "I don't have enough information"]
@@ -420,4 +503,66 @@ Please provide a detailed answer based on the documents above. If the documents 
             raise ConnectionError("The vision model is taking too long to respond. This can happen with large images or when the service is cold starting. Please try again with a smaller image or wait a moment.")
         except Exception as e:
             logging.error(f"Error during image analysis: {e}", exc_info=True)
+            raise ConnectionError(f"Failed to process or analyze the image: {str(e)}")
+
+    def analyze_image_stream(self, image_bytes: bytes, language: str = "en"):
+        """
+        Analyzes a plant image using OpenRouter Vision model with streaming response.
+        Supports both English and Hindi output based on the language parameter.
+        
+        Yields:
+            str: Chunks of the analysis text
+        """
+        try:
+            logging.info(f"Analyzing image with OpenRouter Vision (streaming) in {language}...")
+            
+            # Select prompt based on language
+            if language.lower() == "hi":
+                prompt = settings.VISION_PROMPT_HINDI
+            else:
+                prompt = settings.VISION_PROMPT
+            
+            # Convert image to base64 with size optimization
+            img = Image.open(BytesIO(image_bytes))
+            
+            # Resize large images to prevent memory issues and reduce API costs
+            max_size = (1024, 1024)
+            if img.size[0] > max_size[0] or img.size[1] > max_size[1]:
+                logging.info(f"Resizing image from {img.size} to fit {max_size}")
+                img.thumbnail(max_size, Image.Resampling.LANCZOS)
+            
+            buffered = BytesIO()
+            img.save(buffered, format="PNG", optimize=True)
+            img_base64 = base64.b64encode(buffered.getvalue()).decode('utf-8')
+            logging.info(f"Image encoded to base64, size: {len(img_base64)} characters")
+            
+            # OpenRouter vision format
+            messages = [
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": prompt
+                        },
+                        {
+                            "type": "image_url",
+                            "image_url": {
+                                "url": f"data:image/png;base64,{img_base64}"
+                            }
+                        }
+                    ]
+                }
+            ]
+            
+            logging.info(f"Calling OpenRouter vision model (streaming): {self.vision_model}")
+            # Stream the response
+            for chunk in self._call_openrouter_stream(messages, model=self.vision_model, max_tokens=2000):
+                yield chunk
+                
+        except requests.exceptions.Timeout:
+            logging.error("Image analysis timed out - vision model took too long")
+            raise ConnectionError("The vision model is taking too long to respond. Please try again.")
+        except Exception as e:
+            logging.error(f"Error during streaming image analysis: {e}", exc_info=True)
             raise ConnectionError(f"Failed to process or analyze the image: {str(e)}")

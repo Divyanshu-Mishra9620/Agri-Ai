@@ -1,6 +1,8 @@
 import logging
 from fastapi import APIRouter, HTTPException, UploadFile, File
+from fastapi.responses import StreamingResponse
 from app.api import schemas
+import json
 
 router = APIRouter()
 
@@ -101,4 +103,41 @@ def analyze_crop_image(file: UploadFile = File(...), language: str = "en"):
         raise HTTPException(status_code=503, detail=str(e))
     except Exception as e:
         logging.error(f"An unexpected error occurred in analyze_crop_image: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"An internal server error occurred: {str(e)}")
+
+@router.post("/analyze-plant-image-stream")
+async def analyze_crop_image_stream(file: UploadFile = File(...), language: str = "en"):
+    """
+    Receives an image of a plant leaf and returns a streaming diagnostic report.
+    Supports language parameter: 'en' for English, 'hi' for Hindi.
+    """
+    logging.info(f"Received image for streaming analysis: {file.filename} in language: {language}")
+    
+    if not file.content_type or not file.content_type.startswith("image/"):
+        logging.error(f"Invalid content type: {file.content_type}")
+        raise HTTPException(status_code=400, detail="Invalid file type. Please upload an image.")
+    
+    try:
+        logging.info("Initializing RAG system for streaming image analysis...")
+        rag_system = get_rag_system()
+        image_data = await file.read()
+        logging.info(f"Image data size: {len(image_data)} bytes")
+        
+        async def generate():
+            try:
+                logging.info("Starting streaming image analysis...")
+                # Call the streaming version of analyze_image
+                for chunk in rag_system.analyze_image_stream(image_data, language=language):
+                    # Send as Server-Sent Events (SSE) format
+                    yield f"data: {json.dumps({'chunk': chunk})}\n\n"
+                yield "data: [DONE]\n\n"
+                logging.info("Streaming analysis complete")
+            except Exception as e:
+                logging.error(f"Error during streaming: {e}")
+                yield f"data: {json.dumps({'error': str(e)})}\n\n"
+        
+        return StreamingResponse(generate(), media_type="text/event-stream")
+        
+    except Exception as e:
+        logging.error(f"An unexpected error occurred in analyze_crop_image_stream: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"An internal server error occurred: {str(e)}")

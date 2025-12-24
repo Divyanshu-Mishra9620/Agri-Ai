@@ -47,14 +47,12 @@ try:
         print(f"\n❌ ERROR {response.status_code}")
         print(f"Response Body: {response.text}")
         
-        # Parse error details
         try:
             error_data = response.json()
             print(f"\nError Details: {json.dumps(error_data, indent=2)}")
         except:
             pass
             
-        # Common error explanations
         if response.status_code == 401:
             print("\n💡 401 Unauthorized - Possible causes:")
             print("   1. API key is invalid or expired")

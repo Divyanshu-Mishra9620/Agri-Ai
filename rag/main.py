@@ -79,6 +79,19 @@ def health_check():
         "version": "1.0.0"
     }
 
+@app.get("/socket.io/", tags=["Socket.IO"])
+def socket_io_not_supported():
+    """
+    This endpoint exists to suppress Socket.IO 404 errors.
+    This is a REST API service and does not support Socket.IO.
+    Socket.IO should connect to the Node.js backend instead.
+    """
+    return {
+        "error": "Socket.IO not supported",
+        "message": "This is a REST API service. For real-time features, connect to the Node.js backend.",
+        "node_backend": "https://server-agri-ai.onrender.com"
+    }
+
 if __name__ == "__main__":
     import uvicorn
     port = int(os.environ.get("PORT", 8000))
