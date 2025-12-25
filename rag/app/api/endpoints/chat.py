@@ -26,7 +26,7 @@ async def get_rag_system_async():
         try:
             import asyncio
             logging.info("🔧 Starting async RAG system initialization...")
-            logging.info("⏰ Timeout set to 60 seconds for initialization")
+            logging.info("⏰ Timeout set to 120 seconds for initialization")
             
             # Import and initialize in thread to avoid blocking
             def init_rag():
@@ -44,20 +44,20 @@ async def get_rag_system_async():
             
             _rag_system = await asyncio.wait_for(
                 asyncio.to_thread(init_rag),
-                timeout=60  # Increased to 60 seconds for cold starts
+                timeout=120 
             )
             logging.info("✅ RAG System initialized successfully (async)")
             
         except asyncio.TimeoutError:
             _rag_init_lock = False
-            logging.error("❌ RAG initialization timeout after 60 seconds")
+            logging.error("❌ RAG initialization timeout after 120 seconds")
             logging.error("💡 This usually means:")
             logging.error("   1. API keys are not configured")
             logging.error("   2. External API (OpenRouter/Gemini) is not responding")
             logging.error("   3. Network connectivity issues")
             raise HTTPException(
                 status_code=503,
-                detail="RAG service initialization timeout after 60 seconds. The service is taking too long to start. Please check API keys and try again."
+                detail="RAG service initialization timeout after 120 seconds. The service is taking too long to start. Please check API keys and try again."
             )
         except Exception as e:
             _rag_init_lock = False
@@ -112,7 +112,7 @@ async def get_answer(request: schemas.QueryRequest):
     logging.info(f"🔵 STEP 1: Endpoint entered - Query: {request.query}")
     
     try:
-        logging.info("🔵 STEP 2: Initializing RAG system (async with 60s timeout)...")
+        logging.info("🔵 STEP 2: Initializing RAG system (async with 120s timeout)...")
         rag_system = await get_rag_system_async()
         logging.info("✅ STEP 2 COMPLETE: RAG system initialized successfully")
         
