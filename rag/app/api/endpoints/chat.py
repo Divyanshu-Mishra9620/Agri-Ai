@@ -8,9 +8,56 @@ router = APIRouter()
 
 # Lazy initialization of RAG system to avoid import-time failures
 _rag_system = None
+_rag_init_lock = False
+
+async def get_rag_system_async():
+    """Async lazy initialization of RAG system with timeout"""
+    global _rag_system, _rag_init_lock
+    
+    if _rag_system is None:
+        if _rag_init_lock:
+            # Another request is already initializing, wait a bit
+            import asyncio
+            await asyncio.sleep(0.5)
+            return await get_rag_system_async()
+        
+        _rag_init_lock = True
+        try:
+            import asyncio
+            logging.info("🔧 Starting async RAG system initialization...")
+            
+            # Import and initialize in thread to avoid blocking
+            def init_rag():
+                from app.services.rag_system import RAGSystem
+                return RAGSystem()
+            
+            _rag_system = await asyncio.wait_for(
+                asyncio.to_thread(init_rag),
+                timeout=30  # 30 second timeout for initialization
+            )
+            logging.info("✅ RAG System initialized successfully (async)")
+            
+        except asyncio.TimeoutError:
+            _rag_init_lock = False
+            logging.error("❌ RAG initialization timeout after 30 seconds")
+            raise HTTPException(
+                status_code=503,
+                detail="RAG service initialization timeout - the service is taking too long to start"
+            )
+        except Exception as e:
+            _rag_init_lock = False
+            logging.error(f"❌ Failed to initialize RAG System: {e}", exc_info=True)
+            raise HTTPException(
+                status_code=503,
+                detail=f"RAG service initialization failed: {str(e)}"
+            )
+        finally:
+            _rag_init_lock = False
+            
+    return _rag_system
 
 def get_rag_system():
-    """Lazy initialization of RAG system"""
+    """Synchronous lazy initialization of RAG system (legacy)"""
     global _rag_system
     if _rag_system is None:
         try:
@@ -50,17 +97,16 @@ async def get_answer(request: schemas.QueryRequest):
     logging.info(f"🔵 STEP 1: Endpoint entered - Query: {request.query}")
     
     try:
-        logging.info("🔵 STEP 2: Initializing RAG system...")
-        rag_system = get_rag_system()
+        logging.info("🔵 STEP 2: Initializing RAG system (async with 30s timeout)...")
+        rag_system = await get_rag_system_async()
         logging.info("✅ STEP 2 COMPLETE: RAG system initialized successfully")
         
-        logging.info("🔵 STEP 3: Calling get_answer() method...")
+        logging.info("🔵 STEP 3: Calling get_answer() method (async with 90s timeout)...")
         
-        # Add timeout wrapper to prevent infinite hanging
         try:
             answer_text = await asyncio.wait_for(
                 asyncio.to_thread(rag_system.get_answer, request.query),
-                timeout=90  # 90 second timeout
+                timeout=90   
             )
             logging.info(f"✅ STEP 3 COMPLETE: Answer generated, length: {len(answer_text)}")
             
@@ -80,7 +126,6 @@ async def get_answer(request: schemas.QueryRequest):
         return response
         
     except HTTPException:
-        # Re-raise HTTP exceptions (like 503 from get_rag_system or 504 timeout)
         logging.error("❌ HTTP Exception occurred, re-raising...")
         raise
     except ConnectionError as e:
