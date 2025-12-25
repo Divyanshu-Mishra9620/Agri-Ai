@@ -6,7 +6,6 @@ import json
 
 router = APIRouter()
 
-# Lazy initialization of RAG system to avoid import-time failures
 _rag_system = None
 _rag_init_lock = False
 
@@ -16,7 +15,6 @@ async def get_rag_system_async():
     
     if _rag_system is None:
         if _rag_init_lock:
-            # Another request is already initializing, wait a bit
             import asyncio
             logging.info("⏳ Another request is initializing RAG, waiting...")
             await asyncio.sleep(0.5)
@@ -28,15 +26,19 @@ async def get_rag_system_async():
             logging.info("🔧 Starting async RAG system initialization...")
             logging.info("⏰ Timeout set to 120 seconds for initialization")
             
-            # Import and initialize in thread to avoid blocking
             def init_rag():
                 try:
-                    logging.info("📦 Importing RAGSystem class...")
+                    logging.info("📦 Step A: About to import RAGSystem class...")
+                    import sys
+                    logging.info(f"📦 Step B: Python executable: {sys.executable}")
+                    
+                    logging.info("📦 Step C: Importing from app.services.rag_system...")
                     from app.services.rag_system import RAGSystem
-                    logging.info("✅ RAGSystem class imported successfully")
-                    logging.info("🚀 Creating RAGSystem instance...")
+                    logging.info("✅ Step D: RAGSystem class imported successfully!")
+                    
+                    logging.info("🚀 Step E: Creating RAGSystem instance...")
                     instance = RAGSystem()
-                    logging.info("✅ RAGSystem instance created successfully")
+                    logging.info("✅ Step F: RAGSystem instance created successfully!")
                     return instance
                 except Exception as e:
                     logging.error(f"❌ Error in init_rag thread: {e}", exc_info=True)
@@ -217,9 +219,7 @@ async def analyze_crop_image_stream(file: UploadFile = File(...), language: str 
         async def generate():
             try:
                 logging.info("Starting streaming image analysis...")
-                # Call the streaming version of analyze_image
                 for chunk in rag_system.analyze_image_stream(image_data, language=language):
-                    # Send as Server-Sent Events (SSE) format
                     yield f"data: {json.dumps({'chunk': chunk})}\n\n"
                 yield "data: [DONE]\n\n"
                 logging.info("Streaming analysis complete")

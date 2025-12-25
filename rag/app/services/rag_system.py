@@ -7,7 +7,8 @@ import json
 import time
 
 from app.core.config import settings
-from app.services.web_search import search_the_web
+# Lazy import web_search to avoid blocking during module import
+# from app.services.web_search import search_the_web
 import requests
 
 try:
@@ -457,6 +458,8 @@ Provide the enhanced response with a proper table now:"""
 
             # Step 3: Fall back to web search
             logging.info(f"Direct answer was insufficient. Initiating web search for: '{query}'")
+            # Lazy import to avoid blocking during module initialization
+            from app.services.web_search import search_the_web
             web_context = search_the_web(query)
             
             if not web_context or "error" in web_context.lower():
@@ -479,6 +482,8 @@ Provide the enhanced response with a proper table now:"""
         context_query = f"cultivation practices and environmental risk factors for {crop}"
         logging.info(f"Initiating web search for predictive context: '{context_query}'")
         
+        # Lazy import to avoid blocking during module initialization
+        from app.services.web_search import search_the_web
         web_context = search_the_web(context_query)
         if not web_context:
             return f"I was unable to retrieve sufficient information about {crop} to generate a predictive analysis."
