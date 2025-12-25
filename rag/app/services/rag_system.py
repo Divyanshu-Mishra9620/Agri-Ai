@@ -7,8 +7,6 @@ import json
 import time
 
 from app.core.config import settings
-# Lazy import web_search to avoid blocking during module import
-# from app.services.web_search import search_the_web
 import requests
 
 try:
@@ -39,7 +37,6 @@ class RAGSystem:
             logging.info(f"📦 Using OpenRouter (Model: {self.text_model})")
             logging.info(f"🖼️  Vision Model: {self.vision_model}")
             
-            # Step 2: Initialize vector store (optional)
             logging.info("Step 2: Checking vector store dependencies...")
             if VECTOR_STORE_AVAILABLE:
                 logging.info("Vector store dependencies available, attempting initialization...")
@@ -84,12 +81,11 @@ class RAGSystem:
         if model is None:
             model = self.text_model
             
-        # Auto-determine timeout based on model type - INCREASED for Render free tier
         if timeout is None:
             if model == self.vision_model or 'vision' in model.lower() or 'gpt-4o' in model.lower():
-                timeout = 180  # 3 minutes for vision models (Render can be slow)
+                timeout = 180  
             else:
-                timeout = 90  # 90 seconds for text models
+                timeout = 90  
             
         headers = {
             "Authorization": f"Bearer {self.api_key}",
@@ -103,7 +99,7 @@ class RAGSystem:
             "messages": messages,
             "max_tokens": max_tokens,
             "temperature": 0.7,
-            "stream": True  # Enable streaming
+            "stream": True   
         }
         
         try:
@@ -121,12 +117,11 @@ class RAGSystem:
             logging.info("✅ Streaming response started, processing chunks...")
             chunk_count = 0
             
-            # Process streamed response
             for line in response.iter_lines():
                 if line:
                     line_text = line.decode('utf-8')
                     if line_text.startswith('data: '):
-                        data_str = line_text[6:]  # Remove 'data: ' prefix
+                        data_str = line_text[6:]  
                         if data_str == '[DONE]':
                             logging.info(f"✅ Streaming complete! Processed {chunk_count} chunks")
                             break
@@ -164,21 +159,19 @@ class RAGSystem:
         if model is None:
             model = self.text_model
             
-        # Auto-determine timeout based on model type - INCREASED for production
         if timeout is None:
-            # Vision models need more time (especially with images)
             if model == self.vision_model or 'vision' in model.lower() or 'gpt-4o' in model.lower():
-                timeout = 120  # 2 minutes for vision models
+                timeout = 120 
             else:
-                timeout = 60  # 60 seconds for text models (was 45, increased for Render)
+                timeout = 60 
         
         logging.info(f"🔧 API Config: model={model}, max_tokens={max_tokens}, timeout={timeout}s, retries={max_retries}")
             
         headers = {
             "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json",
-            "HTTP-Referer": "https://krishinova.app",  # Optional: your site URL
-            "X-Title": "Krishi Mitra"  # Optional: your app name
+            "HTTP-Referer": "https://krishinova.app",  
+            "X-Title": "Krishi Mitra"
         }
         
         payload = {
@@ -204,10 +197,9 @@ class RAGSystem:
                 
                 logging.info(f"📡 Received response: status_code={response.status_code}")
                 
-                # Handle rate limiting with exponential backoff
                 if response.status_code == 429:
                     if attempt < max_retries - 1:
-                        wait_time = (2 ** attempt) * 2  # 2, 4, 8 seconds
+                        wait_time = (2 ** attempt) * 2  
                         logging.warning(f"Rate limit hit. Waiting {wait_time} seconds before retry...")
                         time.sleep(wait_time)
                         continue
@@ -239,7 +231,6 @@ class RAGSystem:
                         error_msg = error_data.get('error', {}).get('message', str(e))
                         logging.error(f"API Error Details: {error_msg}")
                         
-                        # Don't retry on client errors (except 429)
                         if e.response.status_code != 429:
                             raise ConnectionError(f"AI service error: {error_msg}")
                     except:
@@ -267,7 +258,7 @@ class RAGSystem:
             api_url = (
                 f"https://api.openweathermap.org/data/2.5/forecast"
                 f"?q={city}&appid={settings.OPENWEATHER_API_KEY}"
-                f"&units=metric&cnt=40"  # cnt=40 gives ~5 days (40 * 3 hours)
+                f"&units=metric&cnt=40"
         )
             resp = requests.get(api_url, timeout=10)
             resp.raise_for_status()
@@ -280,7 +271,6 @@ class RAGSystem:
             forecast_summary = self._summarize_openweather_forecast(weather_data)
             prompt = settings.WEATHER_ALERT_PROMPT.format(weather_data=forecast_summary)
             
-            # Use OpenRouter API
             messages = [{"role": "user", "content": prompt}]
             analysis_text = self._call_openrouter(messages)
             return analysis_text
@@ -296,11 +286,9 @@ class RAGSystem:
         country = data['city']['country']
         summary = f"Weather Forecast for {city_name}, {country}:\n\n"
         
-        # Group forecasts by date (OpenWeather provides 3-hour intervals)
         daily_forecasts = {}
         
         for forecast in data['list']:
-            # Convert timestamp to date
             date_str = datetime.fromtimestamp(forecast['dt']).strftime('%Y-%m-%d')
             
             if date_str not in daily_forecasts:
@@ -311,29 +299,23 @@ class RAGSystem:
                     'precipitation': 0,
                     'humidity': []
                 }
-            
-            # Collect data for this day
             daily_forecasts[date_str]['temps'].append(forecast['main']['temp'])
             daily_forecasts[date_str]['conditions'].append(forecast['weather'][0]['description'])
             daily_forecasts[date_str]['wind_speeds'].append(forecast['wind']['speed'])
             daily_forecasts[date_str]['humidity'].append(forecast['main']['humidity'])
             
-            # Add precipitation if exists (rain or snow)
             if 'rain' in forecast and '3h' in forecast['rain']:
                 daily_forecasts[date_str]['precipitation'] += forecast['rain']['3h']
             if 'snow' in forecast and '3h' in forecast['snow']:
                 daily_forecasts[date_str]['precipitation'] += forecast['snow']['3h']
         
-        # Create daily summary (limit to 7 days for consistency)
         for date, day_data in sorted(daily_forecasts.items())[:7]:
             avg_temp = sum(day_data['temps']) / len(day_data['temps'])
             max_temp = max(day_data['temps'])
             min_temp = min(day_data['temps'])
             max_wind = max(day_data['wind_speeds'])
             avg_humidity = sum(day_data['humidity']) / len(day_data['humidity'])
-            # Most common condition
-            most_common_condition = max(set(day_data['conditions']), 
-                                       key=day_data['conditions'].count)
+            most_common_condition = max(set(day_data['conditions']), key=day_data['conditions'].count)
             
             summary += (
                 f" - {date}: "
