@@ -438,9 +438,7 @@ Provide the enhanced response with a proper table now:"""
                 logging.info("Direct answer is sufficient. Returning to user.")
                 return initial_answer
 
-            # Step 3: Fall back to web search
             logging.info(f"Direct answer was insufficient. Initiating web search for: '{query}'")
-            # Lazy import to avoid blocking during module initialization
             from app.services.web_search import search_the_web
             web_context = search_the_web(query)
             
