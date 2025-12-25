@@ -231,4 +231,9 @@ async def analyze_crop_image_stream(file: UploadFile = File(...), language: str 
         
     except Exception as e:
         logging.error(f"An unexpected error occurred in analyze_crop_image_stream: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"An internal server error occurred: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"An internal server error occurred: {str(e)}") 
+ @ r o u t e r . g e t ( ' / h e a l t h - c h e c k ' )  
+ a s y n c   d e f   h e a l t h _ c h e c k ( ) :  
+         i m p o r t   o s ,   s y s  
+         r e t u r n   { ' s t a t u s ' :   ' h e a l t h y ' ,   ' o p e n r o u t e r _ k e y _ p r e s e n t ' :   b o o l ( o s . g e t e n v ( ' O P E N R O U T E R _ A P I _ K E Y ' ) ) }  
+ 
