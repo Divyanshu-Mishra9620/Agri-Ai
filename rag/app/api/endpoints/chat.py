@@ -40,24 +40,55 @@ def get_weather_alert_for_location(request: schemas.QueryRequest):
         raise HTTPException(status_code=500, detail="An internal server error occurred.")
 
 @router.post("/get-answer", response_model=schemas.AnswerResponse)
-def get_answer(request: schemas.QueryRequest):
+async def get_answer(request: schemas.QueryRequest):
     """
     Receives a user's query and returns an answer based on web search.
     """
-    logging.info(f"Received query: {request.query}")
+    import asyncio
+    
+    logging.info("=" * 60)
+    logging.info(f"🔵 STEP 1: Endpoint entered - Query: {request.query}")
+    
     try:
-        logging.info("Initializing RAG system...")
+        logging.info("🔵 STEP 2: Initializing RAG system...")
         rag_system = get_rag_system()
-        logging.info("RAG system initialized, processing query...")
-        answer_text = rag_system.get_answer(request.query)
-        logging.info(f"Query processed successfully, answer length: {len(answer_text)}")
-        return schemas.AnswerResponse(answer=answer_text)
+        logging.info("✅ STEP 2 COMPLETE: RAG system initialized successfully")
+        
+        logging.info("🔵 STEP 3: Calling get_answer() method...")
+        
+        # Add timeout wrapper to prevent infinite hanging
+        try:
+            answer_text = await asyncio.wait_for(
+                asyncio.to_thread(rag_system.get_answer, request.query),
+                timeout=90  # 90 second timeout
+            )
+            logging.info(f"✅ STEP 3 COMPLETE: Answer generated, length: {len(answer_text)}")
+            
+        except asyncio.TimeoutError:
+            logging.error("❌ TIMEOUT: RAG system took longer than 90 seconds")
+            raise HTTPException(
+                status_code=504,
+                detail="Request timeout: The AI service took too long to respond. Please try again with a simpler query."
+            )
+        
+        logging.info("🔵 STEP 4: Preparing response...")
+        response = schemas.AnswerResponse(answer=answer_text)
+        logging.info("✅ STEP 4 COMPLETE: Response prepared")
+        
+        logging.info("🔵 STEP 5: Returning response to client...")
+        logging.info("=" * 60)
+        return response
+        
+    except HTTPException:
+        # Re-raise HTTP exceptions (like 503 from get_rag_system or 504 timeout)
+        logging.error("❌ HTTP Exception occurred, re-raising...")
+        raise
     except ConnectionError as e:
-        logging.error(f"A connection error occurred: {e}")
-        raise HTTPException(status_code=503, detail=f"AI service unavailable: {e}")
+        logging.error(f"❌ Connection error: {e}")
+        raise HTTPException(status_code=503, detail=f"AI service unavailable: {str(e)}")
     except Exception as e:
-        logging.error(f"An unexpected error occurred in get_answer: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail="An internal server error occurred.")
+        logging.error(f"❌ CRITICAL ERROR in get_answer: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
 @router.post("/predict-impact", response_model=schemas.PredictionResponse)
 def predict_impact(request: schemas.PredictRequest):

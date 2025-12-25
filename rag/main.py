@@ -64,7 +64,10 @@ async def startup_event():
     logger.info("🚀 Agri-AI RAG API is starting up!")
     logger.info(f"📍 Service: {settings.PROJECT_NAME}")
     logger.info(f"🌐 Environment: {os.getenv('RENDER', 'Local')}")
+    logger.info(f"🔑 OpenRouter API Key configured: {'Yes' if settings.OPENROUTER_API_KEY else 'No'}")
     logger.info(f"🔑 Gemini API Key configured: {'Yes' if settings.GEMINI_API_KEY else 'No'}")
+    logger.info(f"📦 OpenRouter Model: {settings.OPENROUTER_MODEL}")
+    logger.info(f"🖼️  OpenRouter Vision Model: {settings.OPENROUTER_VISION_MODEL}")
     logger.info("=" * 50)
 
 @app.get("/", tags=["Root"])

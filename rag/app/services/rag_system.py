@@ -22,40 +22,50 @@ class RAGSystem:
         """Initialize RAG System with OpenRouter API"""
         logging.info("Starting RAG System initialization...")
         
-        self.api_key = settings.OPENROUTER_API_KEY or settings.GEMINI_API_KEY
-        self.text_model = settings.OPENROUTER_MODEL
-        self.vision_model = settings.OPENROUTER_VISION_MODEL
-        self.base_url = "https://openrouter.ai/api/v1/chat/completions"
-        
-        if not self.api_key:
-            logging.error("No API key found! OPENROUTER_API_KEY and GEMINI_API_KEY are both missing!")
-            raise ValueError("No API key found! Set OPENROUTER_API_KEY or GEMINI_API_KEY in environment variables")
-        
-        logging.info(f"✅ API key configured successfully")
-        logging.info(f"📦 Using OpenRouter (Model: {self.text_model})")
-        logging.info(f"🖼️  Vision Model: {self.vision_model}")
-        
-        if VECTOR_STORE_AVAILABLE:
-            logging.info("Vector store dependencies available, attempting initialization...")
-            try:
-                import os
-                if os.getenv('RENDER'):
-                    logging.info("Running on Render, skipping vector store initialization (no persistent storage)")
+        try:
+            # Step 1: Get API key
+            logging.info("Step 1: Checking for API keys...")
+            self.api_key = settings.OPENROUTER_API_KEY or settings.GEMINI_API_KEY
+            self.text_model = settings.OPENROUTER_MODEL
+            self.vision_model = settings.OPENROUTER_VISION_MODEL
+            self.base_url = "https://openrouter.ai/api/v1/chat/completions"
+            
+            if not self.api_key:
+                logging.error("❌ No API key found! OPENROUTER_API_KEY and GEMINI_API_KEY are both missing!")
+                raise ValueError("No API key found! Set OPENROUTER_API_KEY or GEMINI_API_KEY in environment variables")
+            
+            logging.info("✅ API key configured successfully")
+            logging.info(f"📦 Using OpenRouter (Model: {self.text_model})")
+            logging.info(f"🖼️  Vision Model: {self.vision_model}")
+            
+            # Step 2: Initialize vector store (optional)
+            logging.info("Step 2: Checking vector store dependencies...")
+            if VECTOR_STORE_AVAILABLE:
+                logging.info("Vector store dependencies available, attempting initialization...")
+                try:
+                    import os
+                    if os.getenv('RENDER'):
+                        logging.info("Running on Render, skipping vector store initialization (no persistent storage)")
+                        self.vector_store = None
+                    else:
+                        logging.info("Initializing vector store...")
+                        self.vector_store = VectorStore(
+                            persist_directory="./chroma_db",
+                            collection_name="agri_docs"
+                        )
+                        logging.info("✅ RAG System initialized with vector store")
+                except Exception as e:
+                    logging.warning(f"⚠️  Could not initialize vector store: {e}")
                     self.vector_store = None
-                else:
-                    self.vector_store = VectorStore(
-                        persist_directory="./chroma_db",
-                        collection_name="agri_docs"
-                    )
-                    logging.info("RAG System initialized with vector store")
-            except Exception as e:
-                logging.warning(f"Could not initialize vector store: {e}")
+            else:
                 self.vector_store = None
-        else:
-            self.vector_store = None
-            logging.info("Vector store dependencies not available (lightweight mode)")
-        
-        logging.info("✅ RAG System initialization complete!")
+                logging.info("✅ Vector store dependencies not available (lightweight mode)")
+            
+            logging.info("✅✅✅ RAG System initialization complete!")
+            
+        except Exception as e:
+            logging.error(f"❌❌❌ CRITICAL: RAG System initialization failed: {e}", exc_info=True)
+            raise
     
     def _call_openrouter_stream(self, messages: list, model: str = None, max_tokens: int = 4000, timeout: int = None):
         """
@@ -153,13 +163,15 @@ class RAGSystem:
         if model is None:
             model = self.text_model
             
-        # Auto-determine timeout based on model type
+        # Auto-determine timeout based on model type - INCREASED for production
         if timeout is None:
             # Vision models need more time (especially with images)
             if model == self.vision_model or 'vision' in model.lower() or 'gpt-4o' in model.lower():
                 timeout = 120  # 2 minutes for vision models
             else:
-                timeout = 45  # 45 seconds for text models
+                timeout = 60  # 60 seconds for text models (was 45, increased for Render)
+        
+        logging.info(f"🔧 API Config: model={model}, max_tokens={max_tokens}, timeout={timeout}s, retries={max_retries}")
             
         headers = {
             "Authorization": f"Bearer {self.api_key}",
@@ -177,13 +189,19 @@ class RAGSystem:
         
         for attempt in range(max_retries):
             try:
-                logging.info(f"Calling OpenRouter API with model: {model} (attempt {attempt + 1}/{max_retries}, timeout: {timeout}s)")
+                logging.info(f"🚀 Calling OpenRouter API (attempt {attempt + 1}/{max_retries})")
+                logging.info(f"   Model: {model}")
+                logging.info(f"   Timeout: {timeout}s")
+                logging.info(f"   Max tokens: {max_tokens}")
+                
                 response = requests.post(
                     self.base_url,
                     headers=headers,
                     json=payload,
                     timeout=timeout
                 )
+                
+                logging.info(f"📡 Received response: status_code={response.status_code}")
                 
                 # Handle rate limiting with exponential backoff
                 if response.status_code == 429:
@@ -386,19 +404,34 @@ Please provide a detailed answer based on the documents above. If the documents 
                 logging.info("Vector store not available. Using direct query mode.")
             
             # Step 2: Try direct query with OpenRouter
-            logging.info(f"Attempting to get a direct answer for query: '{query}'")
-            logging.info(f"Formatting district report prompt...")
+            logging.info("=" * 50)
+            logging.info(f"� RAG STEP 1: Starting direct query for: '{query}'")
+            logging.info("� RAG STEP 2: Formatting district report prompt...")
             direct_prompt = settings.DISTRICT_REPORT_PROMPT.format(district_name=query)
-            logging.info(f"Prompt formatted, creating messages...")
+            logging.info("✅ RAG STEP 2 COMPLETE: Prompt formatted")
+            
+            logging.info("🟢 RAG STEP 3: Creating messages array...")
             messages = [{"role": "user", "content": direct_prompt}]
-            logging.info(f"Calling OpenRouter API for district query...")
-            initial_answer = self._call_openrouter(messages, max_tokens=1500)  # Reduced for faster response
-            logging.info(f"Received answer from OpenRouter, length: {len(initial_answer)}")
+            logging.info("✅ RAG STEP 3 COMPLETE: Messages created")
+            
+            logging.info("� RAG STEP 4: Calling OpenRouter API (this may take 30-60s)...")
+            
+            # Add explicit timeout for production
+            try:
+                initial_answer = self._call_openrouter(
+                    messages, 
+                    max_tokens=1500,
+                    timeout=60  # 60 seconds for district queries
+                )
+                logging.info(f"✅ RAG STEP 4 COMPLETE: Received answer, length: {len(initial_answer)}")
+            except Exception as e:
+                logging.error(f"❌ RAG STEP 4 FAILED: OpenRouter API call failed: {e}", exc_info=True)
+                raise
 
             # Skip web search for district queries - just return the initial answer
             # Web search adds 30-60 seconds and often times out
             if "district" in query.lower() or "farming in" in query.lower():
-                logging.info("District query detected. Returning direct answer without web search.")
+                logging.info("✅ District query detected. Returning direct answer without web search.")
                 
                 # Validate response has table format
                 if "|" not in initial_answer or "Crop" not in initial_answer:
