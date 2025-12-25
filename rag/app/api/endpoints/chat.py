@@ -18,6 +18,7 @@ async def get_rag_system_async():
         if _rag_init_lock:
             # Another request is already initializing, wait a bit
             import asyncio
+            logging.info("⏳ Another request is initializing RAG, waiting...")
             await asyncio.sleep(0.5)
             return await get_rag_system_async()
         
@@ -25,24 +26,38 @@ async def get_rag_system_async():
         try:
             import asyncio
             logging.info("🔧 Starting async RAG system initialization...")
+            logging.info("⏰ Timeout set to 60 seconds for initialization")
             
             # Import and initialize in thread to avoid blocking
             def init_rag():
-                from app.services.rag_system import RAGSystem
-                return RAGSystem()
+                try:
+                    logging.info("📦 Importing RAGSystem class...")
+                    from app.services.rag_system import RAGSystem
+                    logging.info("✅ RAGSystem class imported successfully")
+                    logging.info("🚀 Creating RAGSystem instance...")
+                    instance = RAGSystem()
+                    logging.info("✅ RAGSystem instance created successfully")
+                    return instance
+                except Exception as e:
+                    logging.error(f"❌ Error in init_rag thread: {e}", exc_info=True)
+                    raise
             
             _rag_system = await asyncio.wait_for(
                 asyncio.to_thread(init_rag),
-                timeout=30  # 30 second timeout for initialization
+                timeout=60  # Increased to 60 seconds for cold starts
             )
             logging.info("✅ RAG System initialized successfully (async)")
             
         except asyncio.TimeoutError:
             _rag_init_lock = False
-            logging.error("❌ RAG initialization timeout after 30 seconds")
+            logging.error("❌ RAG initialization timeout after 60 seconds")
+            logging.error("💡 This usually means:")
+            logging.error("   1. API keys are not configured")
+            logging.error("   2. External API (OpenRouter/Gemini) is not responding")
+            logging.error("   3. Network connectivity issues")
             raise HTTPException(
                 status_code=503,
-                detail="RAG service initialization timeout - the service is taking too long to start"
+                detail="RAG service initialization timeout after 60 seconds. The service is taking too long to start. Please check API keys and try again."
             )
         except Exception as e:
             _rag_init_lock = False
@@ -97,7 +112,7 @@ async def get_answer(request: schemas.QueryRequest):
     logging.info(f"🔵 STEP 1: Endpoint entered - Query: {request.query}")
     
     try:
-        logging.info("🔵 STEP 2: Initializing RAG system (async with 30s timeout)...")
+        logging.info("🔵 STEP 2: Initializing RAG system (async with 60s timeout)...")
         rag_system = await get_rag_system_async()
         logging.info("✅ STEP 2 COMPLETE: RAG system initialized successfully")
         
