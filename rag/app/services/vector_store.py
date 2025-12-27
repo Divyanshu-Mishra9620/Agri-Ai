@@ -3,7 +3,6 @@ import os
 from typing import List, Dict, Optional
 import chromadb
 from chromadb.config import Settings
-from sentence_transformers import SentenceTransformer
 
 logger = logging.getLogger(__name__)
 
@@ -20,6 +19,9 @@ class VectorStore:
             persist_directory: Directory to persist the vector database
             collection_name: Name of the collection to store documents
         """
+        # Lazy import of sentence_transformers to avoid slow module loading
+        from sentence_transformers import SentenceTransformer
+        
         self.persist_directory = persist_directory
         self.collection_name = collection_name
         
