@@ -1,9 +1,9 @@
 """
 Quick sanity test - call this to verify server works without RAG initialization
 """
+
 import requests
 
-# Test Render production
 url = "https://agri-ai-17u4.onrender.com/api/health-check"
 
 try:

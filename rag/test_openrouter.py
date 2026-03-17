@@ -1,11 +1,10 @@
-#!/usr/bin/env python3
 """Test OpenRouter API key validity"""
+
 import requests
 import json
 import os
 from dotenv import load_dotenv
 
-# Load environment variables
 load_dotenv()
 
 API_KEY = os.getenv("OPENROUTER_API_KEY")
@@ -14,15 +13,10 @@ print(f"Full key length: {len(API_KEY)} characters")
 print("-" * 60)
 
 url = "https://openrouter.ai/api/v1/chat/completions"
-headers = {
-    "Authorization": f"Bearer {API_KEY}",
-    "Content-Type": "application/json"
-}
+headers = {"Authorization": f"Bearer {API_KEY}", "Content-Type": "application/json"}
 data = {
     "model": "google/gemini-2.0-flash-exp:free",
-    "messages": [
-        {"role": "user", "content": "Say 'Hello World'"}
-    ]
+    "messages": [{"role": "user", "content": "Say 'Hello World'"}],
 }
 
 print("\n🔄 Sending test request to OpenRouter...")
@@ -34,11 +28,11 @@ try:
     print("Making POST request...")
     response = requests.post(url, headers=headers, json=data, timeout=10)
     print(f"Request completed!")
-    
+
     print(f"\n📊 Response Status: {response.status_code}")
     print(f"Response Headers: {dict(response.headers)}")
     print("-" * 60)
-    
+
     if response.status_code == 200:
         result = response.json()
         print("\n✅ SUCCESS! OpenRouter API is working!")
@@ -46,13 +40,13 @@ try:
     else:
         print(f"\n❌ ERROR {response.status_code}")
         print(f"Response Body: {response.text}")
-        
+
         try:
             error_data = response.json()
             print(f"\nError Details: {json.dumps(error_data, indent=2)}")
         except:
             pass
-            
+
         if response.status_code == 401:
             print("\n💡 401 Unauthorized - Possible causes:")
             print("   1. API key is invalid or expired")
@@ -63,7 +57,7 @@ try:
             print("   - Verify your email")
             print("   - Add a payment method (even for free tier)")
             print("   - Generate a new API key")
-        
+
 except requests.exceptions.Timeout:
     print("\n⏱️ Request timed out after 30 seconds")
 except requests.exceptions.ConnectionError as e:

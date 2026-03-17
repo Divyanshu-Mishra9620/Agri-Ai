@@ -7,22 +7,20 @@ import os
 import sys
 from pathlib import Path
 
-# Add the current directory to Python path
 sys.path.insert(0, str(Path(__file__).parent))
 
 from app.services.vector_store import VectorStore
 from app.services.document_processor import DocumentProcessor
 
+
 def ingest_documentation():
     """Ingest all documentation markdown files into the vector store."""
-    
+
     print("🚀 Starting documentation ingestion...\n")
-    
-    # Initialize services
+
     vector_store = VectorStore()
     doc_processor = DocumentProcessor()
-    
-    # List of documentation files to ingest
+
     doc_files = [
         "README.md",
         "API_DOCUMENTATION.md",
@@ -31,64 +29,58 @@ def ingest_documentation():
         "DEPLOYMENT.md",
         "SETUP_GUIDE.md",
         "QUICK_REFERENCE.md",
-        "INDEX.md"
+        "INDEX.md",
     ]
-    
+
     total_chunks = 0
     processed_files = 0
-    
-    # Collect all chunks to add in batch
+
     all_documents = []
     all_metadatas = []
     all_ids = []
     chunk_counter = 0
-    
+
     for doc_file in doc_files:
         doc_path = Path(__file__).parent / doc_file
-        
+
         if not doc_path.exists():
             print(f"⚠️  Warning: {doc_file} not found, skipping...")
             continue
-        
+
         print(f"📄 Processing {doc_file}...")
-        
-        # Read and process the markdown file
-        with open(doc_path, 'r', encoding='utf-8') as f:
+
+        with open(doc_path, "r", encoding="utf-8") as f:
             content = f.read()
-        
-        # Chunk the text
+
         chunks = doc_processor.chunk_text(content)
-        
+
         if not chunks:
             print(f"   ⚠️  No content extracted from {doc_file}")
             continue
-        
-        # Prepare chunks for batch insertion
+
         for i, chunk in enumerate(chunks):
             metadata = {
                 "source": doc_file,
                 "chunk_index": i,
                 "type": "documentation",
-                "category": get_doc_category(doc_file)
+                "category": get_doc_category(doc_file),
             }
             all_documents.append(chunk)
             all_metadatas.append(metadata)
             all_ids.append(f"doc_{chunk_counter}")
             chunk_counter += 1
-        
+
         print(f"   ✓ Prepared {len(chunks)} chunks from {doc_file}")
         total_chunks += len(chunks)
         processed_files += 1
-    
-    # Add all documents to vector store in batch
+
     if all_documents:
         print(f"\n📦 Adding {len(all_documents)} chunks to vector store...")
         vector_store.add_documents(all_documents, all_metadatas, all_ids)
         print(f"   ✓ Successfully added all chunks!")
-    
-    # Get final count
+
     total_docs_in_store = vector_store.get_collection_count()
-    
+
     print(f"\n{'='*60}")
     print(f"✓ Successfully ingested documentation!")
     print(f"{'='*60}")
@@ -103,6 +95,7 @@ def ingest_documentation():
     print(f"   - System architecture and features")
     print(f"{'='*60}\n")
 
+
 def get_doc_category(filename: str) -> str:
     """Determine the category of a documentation file."""
     categories = {
@@ -113,9 +106,10 @@ def get_doc_category(filename: str) -> str:
         "DEPLOYMENT.md": "deployment",
         "SETUP_GUIDE.md": "setup",
         "QUICK_REFERENCE.md": "quick_reference",
-        "INDEX.md": "navigation"
+        "INDEX.md": "navigation",
     }
     return categories.get(filename, "general")
+
 
 if __name__ == "__main__":
     try:
@@ -123,5 +117,6 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"\n❌ Error during ingestion: {str(e)}")
         import traceback
+
         traceback.print_exc()
         sys.exit(1)
